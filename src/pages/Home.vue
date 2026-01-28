@@ -4,10 +4,10 @@
       <div class="hero-content text-center">
         <div class="max-w-3xl">
           <h1 class="text-5xl font-extrabold leading-tight text-primary">
-            Wireflow: 您的下一代自托管组网利器
+            Wireflow: 云原生自动网络编排
           </h1>
           <p class="py-6 text-lg text-base-content/80">
-            告别复杂配置！通过 K8s CRD 和 QUIC 协议，Wireflow 提供可视化、高性能、高可用的自动化内网穿透方案。
+            告别复杂配置！通过 K8s CRD 支持多种传输协议，Wireflow 提供可视化、高性能、高可用的自动化内网穿透方案。
           </p>
           <div class="flex justify-center gap-4 mt-8">
             <button class="btn btn-primary btn-lg shadow-lg">立即部署 <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg></button>
@@ -31,8 +31,8 @@
           <div class="card bg-base-200 shadow-xl">
             <div class="card-body items-center text-center">
               <svg class="h-12 w-12 text-accent mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-              <h3 class="card-title text-2xl">QUIC 高速传输</h3>
-              <p>内置 QUIC 协议支持，在复杂网络环境下提供更低的延迟和更强的稳定性。</p>
+              <h3 class="card-title text-2xl">零信任网络</h3>
+              <p>Zero Touch，告别复杂配置，白名单与多样性网络策略保驾护航。</p>
             </div>
           </div>
           <div class="card bg-base-200 shadow-xl">
