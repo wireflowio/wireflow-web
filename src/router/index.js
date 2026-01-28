@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LandingLayout from '../layouts/LandingLayout.vue'
 import MainLayout from '../layouts/MainLayout.vue'
+import BlankLayout from '../layouts/BlankLayout.vue'
 
 import Dashboard from '../pages/Dashboard.vue'
 import Nodes from '../pages/Nodes.vue'
@@ -11,6 +12,7 @@ import Dns from '../pages/Dns.vue'
 import Profile from '../pages/Profile.vue'
 import Topology from '../pages/Topology.vue'
 import Home from '../pages/Home.vue'
+import Login from '../pages/Login.vue'
 
 const routes = [
     // 主页面：不带 SideNav
@@ -21,6 +23,16 @@ const routes = [
             { path: '', name: 'home', component: Home, meta: { title: 'WireFlow' } },
         ],
     },
+
+    // 登录页：空白布局
+    {
+        path: '/',
+        component: BlankLayout,
+        children: [
+            { path: 'login', name: 'login', component: Login, meta: { title: '登录' } },
+        ],
+    },
+
     {
         path: '/',
         component: MainLayout,
