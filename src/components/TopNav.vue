@@ -1,29 +1,143 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useTheme } from '../composables/useTheme'
+
+const { theme, toggleTheme } = useTheme()
+
+const user = ref({
+  name: 'admin',
+  email: 'admin@wireflow.local',
+  avatarUrl: 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp',
+})
+</script>
+
 <template>
-  <div class="navbar bg-base-100 shadow-lg">
-    <div class="container mx-auto">
-      <div class="flex-1">
-        <a class="btn btn-ghost normal-case text-xl font-bold">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2.5" stroke-dasharray="60 30" />
-            <path d="M18 6L10 18H16L14 26L22 14H16L18 6Z" fill="currentColor" />
-          </svg>
-          Wireflow
-        </a>
-      </div>
-      <div class="flex-none">
-        <ul class="menu menu-horizontal px-1">
-          <li><a class="hover:text-primary">特性</a></li>
-          <li><a class="hover:text-primary">部署</a></li>
-          <li><a class="hover:text-primary">贡献</a></li>
-          <li>
-            <a class="btn btn-ghost" href="https://github.com/your-repo" target="_blank">
-              GitHub <svg class="h-4 w-4 ml-1" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.419 2.865 8.165 6.839 9.489.5.092.682-.217.682-.483 0-.237-.008-.87.008-1.703-2.782.604-3.369-1.34-3.369-1.34-.454-1.152-1.107-1.458-1.107-1.458-.906-.618.069-.607.069-.607 1.002.071 1.531 1.029 1.531 1.029.89 1.528 2.336 1.087 2.9.832.091-.645.35-1.087.636-1.338-2.22-.253-4.555-1.111-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.236 9.236 0 0112 5.09c.85.006 1.704.114 2.502.327 1.909-1.296 2.747-1.025 2.747-1.025.546 1.378.202 2.397.098 2.65.64.699 1.029 1.592 1.029 2.683 0 3.842-2.339 4.685-4.566 4.935.359.308.678.918.678 1.851 0 1.338-.012 2.419-.012 2.747 0 .267.18.579.688.481C21.144 20.163 24 16.417 24 12c0-5.523-4.477-10-10-10z" clip-rule="evenodd"></path></svg>
-            </a>
-          </li>
-        </ul>
+  <header class="w-full bg-base-100 border-b border-base-300 sticky top-0 z-50">
+    <div class="mx-auto max-w-[1400px] px-4">
+      <div class="navbar px-0 min-h-14">
+        <!-- Left -->
+        <div class="navbar-start gap-2">
+          <label for="wf-drawer" class="btn btn-ghost btn-sm btn-square lg:hidden" aria-label="Open sidebar">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 6h16"></path>
+              <path d="M4 12h16"></path>
+              <path d="M4 18h16"></path>
+            </svg>
+          </label>
+
+          <router-link to="/dashboard" class="btn btn-ghost btn-sm gap-2 normal-case">
+            <svg width="26" height="26" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="16" cy="16" r="13" stroke="currentColor" stroke-width="2.5" stroke-dasharray="60 30" opacity="0.85" />
+              <path d="M18 6L10 18H16L14 26L22 14H16L18 6Z" fill="currentColor" opacity="0.9" />
+            </svg>
+            <span class="text-base font-semibold tracking-tight">Wireflow Console</span>
+          </router-link>
+        </div>
+
+        <!-- Center -->
+        <div class="navbar-center hidden md:flex">
+          <label class="input input-bordered input-sm flex items-center gap-2 w-[520px] max-w-[48vw]">
+            <svg class="w-4 h-4 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="M21 21l-4.3-4.3"></path>
+            </svg>
+            <input class="grow" placeholder="搜索节点 / 策略 / DNS / Token..." />
+            <kbd class="kbd kbd-sm hidden lg:inline">⌘</kbd>
+            <kbd class="kbd kbd-sm hidden lg:inline">K</kbd>
+          </label>
+        </div>
+
+        <!-- Right -->
+        <div class="navbar-end gap-2">
+          <!-- Theme toggle -->
+          <button
+              class="btn btn-ghost btn-sm btn-square"
+              :title="`切换到 ${theme === 'light' ? 'Dark' : 'Light'}`"
+              @click="toggleTheme"
+              aria-label="Toggle theme"
+          >
+            <!-- Sun (light) / Moon (dark) -->
+            <svg
+                v-if="theme === 'light'"
+                class="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v2"></path>
+              <path d="M12 20v2"></path>
+              <path d="M4.93 4.93l1.41 1.41"></path>
+              <path d="M17.66 17.66l1.41 1.41"></path>
+              <path d="M2 12h2"></path>
+              <path d="M20 12h2"></path>
+              <path d="M4.93 19.07l1.41-1.41"></path>
+              <path d="M17.66 6.34l1.41-1.41"></path>
+            </svg>
+
+            <svg
+                v-else
+                class="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
+              <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 109.8 9.8z"></path>
+            </svg>
+          </button>
+
+          <!-- notification -->
+          <button class="btn btn-ghost btn-sm btn-square" title="通知" aria-label="Notifications">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 7h18s-3 0-3-7"></path>
+              <path d="M13.73 21a2 2 0 01-3.46 0"></path>
+            </svg>
+          </button>
+
+          <!-- user dropdown -->
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-ghost btn-sm h-12 px-2 gap-2">
+              <div class="hidden sm:flex flex-col items-end leading-tight">
+                <span class="text-xs font-semibold">{{ user.name }}</span>
+                <span class="text-[10px] opacity-60">{{ user.email }}</span>
+              </div>
+
+              <div class="avatar">
+                <div class="w-8 rounded-full">
+                  <img :src="user.avatarUrl" alt="avatar" />
+                </div>
+              </div>
+
+              <svg class="w-4 h-4 opacity-60 hidden sm:block" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </div>
+
+            <ul
+                tabindex="0"
+                class="dropdown-content menu bg-base-100 rounded-box z-50 mt-2 w-56 p-2 shadow border border-base-300"
+            >
+              <li class="menu-title"><span>账户</span></li>
+              <li><router-link to="/profile">个人信息</router-link></li>
+              <li><a>设置</a></li>
+              <div class="divider my-1"></div>
+              <li><a class="text-error">退出登录</a></li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </header>
 </template>
-<script setup lang="ts">
-</script>

@@ -45,7 +45,7 @@ const activePath = computed(() => route.path)
         <div class="text-xs uppercase opacity-60 px-2 mb-2">
           {{ group.group }}
         </div>
-        <ul class="menu menu-sm">
+        <ul class="menu menu-base">
           <li v-for="c in group.children" :key="c.to">
             <router-link
                 :to="c.to"

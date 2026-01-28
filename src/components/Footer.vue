@@ -1,19 +1,28 @@
+<!-- src/components/AppFooter.vue -->
 <template>
-  <footer class="footer footer-center p-10 bg-base-300 text-base-content">
-    <div>
-      <svg class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <p class="font-bold">Wireflow.io <br>自动化组网新范式</p>
-      <p>版权所有 © 2024</p>
-    </div>
-    <div>
-      <div class="grid grid-flow-col gap-4">
-        <a><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.419 2.865 8.165 6.839 9.489.5.092.682-.217.682-.483 0-.237-.008-.87.008-1.703-2.782.604-3.369-1.34-3.369-1.34-.454-1.152-1.107-1.458-1.107-1.458-.906-.618.069-.607.069-.607 1.002.071 1.531 1.029 1.531 1.029.89 1.528 2.336 1.087 2.9.832.091-.645.35-1.087.636-1.338-2.22-.253-4.555-1.111-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.236 9.236 0 0112 5.09c.85.006 1.704.114 2.502.327 1.909-1.296 2.747-1.025 2.747-1.025.546 1.378.202 2.397.098 2.65.64.699 1.029 1.592 1.029 2.683 0 3.842-2.339 4.685-4.566 4.935.359.308.678.918.678 1.851 0 1.338-.012 2.419-.012 2.747 0 .267.18.579.688.481C21.144 20.163 24 16.417 24 12c0-5.523-4.477-10-10-10z" clip-rule="evenodd"></path></svg></a>
-        <a><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.29 20.251c-.031.02-.057.03-.092.03-.021 0-.036-.01-.06-.02-.062-.03-.117-.07-.17-.11l-3.32-3.32a.5.5 0 01.708-.708l2.964 2.964a.5.5 0 010 .708zM14.5 16.5a.5.5 0 01-.707 0L8.793 11.005a.5.5 0 01.707-.707l5.005 5.005a.5.5 0 010 .707zM18.5 12.5a.5.5 0 01-.707 0L12.793 7.005a.5.5 0 01.707-.707l5.005 5.005a.5.5 0 010 .707zM22.5 8.5a.5.5 0 01-.707 0L16.793 3.005a.5.5 0 01.707-.707l5.005 5.005a.5.5 0 010 .707z"></path><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.419 2.865 8.165 6.839 9.489.5.092.682-.217.682-.483 0-.237-.008-.87.008-1.703-2.782.604-3.369-1.34-3.369-1.34-.454-1.152-1.107-1.458-1.107-1.458-.906-.618.069-.607.069-.607 1.002.071 1.531 1.029 1.531 1.029.89 1.528 2.336 1.087 2.9.832.091-.645.35-1.087.636-1.338-2.22-.253-4.555-1.111-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.236 9.236 0 0112 5.09c.85.006 1.704.114 2.502.327 1.909-1.296 2.747-1.025 2.747-1.025.546 1.378.202 2.397.098 2.65.64.699 1.029 1.592 1.029 2.683 0 3.842-2.339 4.685-4.566 4.935.359.308.678.918.678 1.851 0 1.338-.012 2.419-.012 2.747 0 .267.18.579.688.481C21.144 20.163 24 16.417 24 12c0-5.523-4.477-10-10-10z" clip-rule="evenodd"></path></svg></a>
+  <footer class="border-t border-base-300 bg-base-100">
+    <div class="mx-auto max-w-[1400px] px-4 py-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="text-sm text-base-content/70">
+          <span class="font-medium text-base-content">Wireflow</span>
+          <span class="mx-2">·</span>
+          <span>自动化网络编排· Range 直出</span>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <a class="btn btn-ghost btn-sm" href="#" target="_blank" rel="noreferrer">文档</a>
+          <a class="btn btn-ghost btn-sm" href="#" target="_blank" rel="noreferrer">GitHub</a>
+          <a class="btn btn-ghost btn-sm" href="#" target="_blank" rel="noreferrer">隐私</a>
+          <a class="btn btn-ghost btn-sm" href="#" target="_blank" rel="noreferrer">状态</a>
+        </div>
+      </div>
+
+      <div class="mt-3 text-xs text-base-content/50">
+        <div>提示：本项目为自托管服务。文件不上传到第三方，按你的部署环境与配置进行代理/索引。</div>
       </div>
     </div>
   </footer>
 </template>
-<script setup lang="ts">
+
+<script setup>
 </script>
