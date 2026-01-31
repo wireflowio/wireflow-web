@@ -6,7 +6,7 @@
         <div class="text-sm text-base-content/70">
           <span class="font-medium text-base-content">Wireflow</span>
           <span class="mx-2">·</span>
-          <span>自动化网络编排· Range 直出</span>
+          <span>自动化网络编排</span>
         </div>
 
         <div class="flex flex-wrap gap-2">
@@ -18,7 +18,7 @@
       </div>
 
       <div class="mt-3 text-xs text-base-content/50">
-        <div>提示：本项目为自托管服务。文件不上传到第三方，按你的部署环境与配置进行代理/索引。</div>
+        <div>提示：本项目为自托管服务。</div>
       </div>
     </div>
   </footer>
