@@ -32,13 +32,13 @@ const handleSave = async (payload) => {
   try {
     // 根据是新建还是编辑，走不同的 API 路径
     if (modalType.value === 'create') {
-      await axios.post('/api/v1/policies', payload)
+      // await axios.post('/api/v1/policies', payload)
     } else {
-      await axios.put(`/api/v1/policies/${payload.name}`, payload)
+      // await axios.put(`/api/v1/policies/${payload.name}`, payload)
     }
 
     isModalOpen.value = false // 关闭弹窗
-    await fetchPolicies()     // 刷新列表数据
+    // await fetchPolicies()     // 刷新列表数据
     // 这里可以加一个成功的 Toast 提示
   } catch (err) {
     alert("保存失败: " + (err.response?.data?.error || err.message))
@@ -129,7 +129,6 @@ const handleSave = async (payload) => {
         </div>
       </div>
     </div>
-  </div>
 
     <PolicyModal
         :show="isModalOpen"
@@ -144,4 +143,8 @@ const handleSave = async (payload) => {
         :name="activePolicy?.name"
         @close="isDeleteOpen = false"
     />
+
+  </div>
+
+
 </template>
