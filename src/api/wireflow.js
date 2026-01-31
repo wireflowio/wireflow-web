@@ -14,8 +14,14 @@ export const getPeers = (networkId) =>
     request.get(`/networks/${networkId}/peers`);
 
 // --- 策略管理 (Policies) ---
-export const updatePolicy = (networkId, policyData) =>
+export const createPolicy = (networkId, policyData) =>
     request.post(`/networks/${networkId}/policies`, policyData);
+
+export const updatePolicy = (networkId, policyData) =>
+    request.update(`/networks/${networkId}/policies`, policyData);
+
+export const deletePolicy = (networkId, policyData) =>
+    request.delete(`/networks/${networkId}/policies`, policyData);
 
 // 导出所有 API
 export default {

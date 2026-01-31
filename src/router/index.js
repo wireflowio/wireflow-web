@@ -47,35 +47,6 @@ const routes = [
             { path: 'profile', name: 'profile', component: Profile },
         ],
     },
-
-    // 策略列表（给它补一个 name，方便 router.push({ name: 'Policies' })）
-    {
-        path: '/policies',
-        name: 'Policies',
-        component: () => import('@/pages/Policies.vue'),
-    },
-
-    // 新建策略
-    {
-        path: '/policies/new',
-        name: 'PolicyCreate',
-        component: () => import('@/pages/PolicyCreate.vue'),
-    },
-
-    // 查看策略
-    {
-        path: '/policies/:name',
-        name: 'PolicyDetail',
-        component: () => import('@/pages/PolicyDetail.vue'),
-    },
-
-    // 编辑策略
-    {
-        path: '/policies/:name/edit',
-        name: 'PolicyEdit',
-        component: () => import('@/pages/PolicyEdit.vue'),
-    },
-
 ]
 
 export default createRouter({
