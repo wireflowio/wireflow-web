@@ -1,4 +1,5 @@
 @import "tailwindcss";
+
 @plugin "daisyui";
 
 /* 可选：让整体更“干净”的基础背景 */

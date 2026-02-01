@@ -27,6 +27,12 @@ const items = [
     children: [
       { name: '实时监控', to: '/monitor', icon: 'monitor' },
     ],
+  },
+  {
+    group: '用户中心',
+    children: [
+      { name: '用户', to: '/user', icon: 'monitor' },
+    ],
   }
 ]
 

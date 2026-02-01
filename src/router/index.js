@@ -13,6 +13,8 @@ import Profile from '../pages/Profile.vue'
 import Topology from '../pages/Topology.vue'
 import Home from '../pages/Home.vue'
 import Login from '../pages/Login.vue'
+import Members from "../pages/Members.vue";
+import Register from "../pages/Register.vue";
 
 const routes = [
     // 主页面：不带 SideNav
@@ -33,6 +35,15 @@ const routes = [
         ],
     },
 
+    // 注册页：空白布局
+    {
+        path: '/',
+        component: BlankLayout,
+        children: [
+            { path: 'register', name: 'register', component: Register, meta: { title: '注册' } },
+        ],
+    },
+
     {
         path: '/',
         component: MainLayout,
@@ -45,6 +56,7 @@ const routes = [
             { path: 'monitor', name: 'monitor', component: Monitor },
             { path: 'dns', name: 'dns', component: Dns },
             { path: 'profile', name: 'profile', component: Profile },
+            { path: 'user', name: 'user', component: Members },
         ],
     },
 ]

@@ -7,6 +7,15 @@ const service = axios.create({
     headers: { 'Content-Type': 'application/json' }
 });
 
+// 请求拦截器：把 localStorage 里的 token 塞进 Header
+service.interceptors.request.use(config => {
+    const token = localStorage.getItem('wf_token')
+    if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`
+    }
+    return config
+})
+
 // 2. 请求拦截器：每条请求都会带上 Token
 service.interceptors.request.use(
     (config) => {
