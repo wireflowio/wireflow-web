@@ -1,61 +1,128 @@
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const go = (path: string) => router.push(path)
+
+// --- 1. Live 监测假数据逻辑 ---
+const nodesCount = ref(128)
+const activeNodes = ref(94)
+const latency = ref(42)
+const lastSync = ref('JUST NOW')
+
+let timer: any
+onMounted(() => {
+  timer = setInterval(() => {
+    // 模拟数据微小波动，增加真实感
+    latency.value = Math.floor(Math.random() * (45 - 38 + 1)) + 38
+    activeNodes.value = 90 + Math.floor(Math.random() * 10)
+    const now = new Date()
+    lastSync.value = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`
+  }, 3000)
+})
+
+onUnmounted(() => clearInterval(timer))
+
+// --- 2. 静态配置项 ---
+const features = [
+  {
+    title: 'Operator-Native CRDs',
+    desc: '深度集成 Kubernetes 生态，通过声明式 CRD 定义网络状态，实现全自动化的生命周期管理。',
+    icon: 'nodes',
+    colorClass: 'bg-primary/5 text-primary border-primary/10'
+  },
+  {
+    title: 'Identity-Based Policy',
+    desc: '基于身份的精细化访问控制，支持大规模节点下的动态白名单注入。',
+    icon: 'policy',
+    colorClass: 'bg-emerald-500/5 text-emerald-500 border-emerald-500/10'
+  },
+  {
+    title: 'Multipath Observability',
+    desc: '内建多路径传输观测引擎，实时可视化异构网络负载，提供毫米级的延迟感知。',
+    icon: 'monitor',
+    colorClass: 'bg-indigo-500/5 text-indigo-500 border-indigo-500/10'
+  }
+]
+</script>
+
 <template>
-  <div class="min-h-screen bg-[#f8fafc] overflow-hidden selection:bg-primary/20">
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[700px] bg-[radial-gradient(circle_at_50%_-10%,rgba(59,130,246,0.12),transparent_60%)] pointer-events-none"></div>
+  <div class="min-h-screen bg-base-100 text-base-content selection:bg-primary/20 transition-colors duration-500 overflow-hidden font-sans">
+
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[700px] bg-[radial-gradient(circle_at_50%_-10%,oklch(var(--p)/0.12),transparent_60%)] pointer-events-none"></div>
 
     <section class="relative pt-24 pb-20 px-4">
       <div class="max-w-6xl mx-auto text-center">
-        <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-600 text-[13px] font-semibold mb-10 animate-fade-in">
-          <span class="flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-primary opacity-75"></span>
+        <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-base-200 border border-base-300 shadow-sm text-base-content/60 text-[12px] font-bold mb-10 animate-fade-in">
+          <span class="flex h-2 w-2 relative">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
           </span>
-          <span class="opacity-70 tracking-wide uppercase">Wireflow Engine v0.1.2</span>
-          <div class="w-px h-3 bg-slate-200 mx-1"></div>
-          <span class="text-primary">Next-Gen Orchestration</span>
+          <span class="tracking-widest uppercase">Wireflow Engine v0.1.2</span>
+          <div class="w-px h-3 bg-base-300 mx-1"></div>
+          <span class="text-primary uppercase tracking-tighter">Next-Gen Orchestration</span>
         </div>
 
-        <h1 class="text-5xl md:text-7xl font-black tracking-tighter leading-[1.05] text-slate-900 mb-8">
+        <h1 class="text-5xl md:text-7xl font-black tracking-tighter leading-[1.05] mb-8">
           声明式云原生<br />
           <span class="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-indigo-400">
             自动化网络编排
           </span>
         </h1>
 
-        <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-500 font-medium leading-relaxed mb-12">
-          基于零信任架构（ZTA）与 Kubernetes 原生 CRD 驱动，Wireflow 实现了异构多云环境下复杂的二层/三层拓扑自动化构建，支撑工业级的跨地域逻辑私有网络。
+        <p class="max-w-3xl mx-auto text-lg opacity-50 font-medium leading-relaxed mb-12">
+          基于零信任架构（ZTA）与 Kubernetes 原生 CRD 驱动，Wireflow 实现了异构多云环境下复杂的逻辑私有网络自动化构建。
         </p>
 
-        <div class="flex flex-col sm:flex-row justify-center gap-5">
-          <button class="btn btn-primary btn-lg rounded-2xl shadow-xl shadow-primary/25 px-10 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group">
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+          <button class="btn btn-primary btn-md rounded-xl px-10 shadow-lg shadow-primary/20" @click="go('/dashboard')">
             立即集群部署
-            <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
           </button>
-          <button class="btn btn-ghost btn-lg rounded-2xl border border-slate-200 bg-white/60 backdrop-blur-sm px-10 hover:bg-white hover:border-slate-300 transition-all duration-300">
+          <button class="btn btn-ghost border-base-300 btn-md rounded-xl px-10 bg-base-200/30 backdrop-blur">
             查阅技术规范
           </button>
         </div>
 
         <div class="mt-20 relative px-4 max-w-5xl mx-auto group">
-          <div class="absolute -inset-1 bg-gradient-to-r from-primary/10 to-indigo-500/10 blur-2xl opacity-50 group-hover:opacity-100 transition duration-1000"></div>
-          <div class="relative bg-white/90 backdrop-blur-xl border border-slate-200/60 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] rounded-[2.5rem] overflow-hidden p-3">
-            <div class="bg-slate-50 rounded-[1.8rem] border border-slate-100 aspect-[16/9] flex flex-col">
-              <div class="h-10 border-b border-slate-100 flex items-center px-6 gap-2">
+          <div class="absolute -inset-2 bg-gradient-to-r from-primary/10 to-indigo-500/10 blur-3xl opacity-50 group-hover:opacity-100 transition duration-1000"></div>
+
+          <div class="relative bg-base-100 dark:bg-neutral border border-base-300 dark:border-white/5 shadow-2xl rounded-[2.5rem] overflow-hidden p-3">
+            <div class="bg-base-200/40 rounded-[1.8rem] border border-base-300/20 aspect-[16/9] flex flex-col relative overflow-hidden">
+
+              <div class="h-10 border-b border-base-300/30 flex items-center px-6 justify-between bg-base-300/10">
                 <div class="flex gap-1.5">
-                  <div class="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
-                  <div class="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
+                  <div class="w-2.5 h-2.5 rounded-full bg-error/30"></div>
+                  <div class="w-2.5 h-2.5 rounded-full bg-warning/30"></div>
                 </div>
-                <div class="mx-auto text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global Network Topology Explorer</div>
+                <div class="text-[9px] font-bold opacity-30 uppercase tracking-[0.3em]">Mesh Topology Explorer</div>
+                <div class="flex items-center gap-2">
+                  <div class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></div>
+                  <span class="text-[9px] font-mono opacity-40 uppercase tracking-tighter">Sync: {{ lastSync }}</span>
+                </div>
               </div>
-              <div class="flex-1 relative flex items-center justify-center overflow-hidden p-8">
 
-                <div class="absolute inset-0 flex items-center justify-center opacity-40 pointer-events-none">
-                  <div class="w-full h-full border-[0.5px] border-slate-200 border-dashed rounded-full scale-150 animate-[spin_60s_linear_infinite]"></div>
-                </div>
-                <div class="z-10 flex flex-col items-center gap-4">
-                  <div class="p-6 bg-white rounded-3xl shadow-xl border border-slate-100 animate-bounce-slow">
-                    <Icon name="topology" class="w-12 h-12 text-primary" />
+              <div class="flex-1 relative flex items-center justify-center p-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-3xl relative z-10">
+                  <div class="bg-base-100/50 dark:bg-black/20 backdrop-blur-md border border-base-300/50 p-6 rounded-3xl transition-transform hover:scale-105">
+                    <div class="text-[10px] font-bold opacity-40 uppercase mb-2">Cluster Nodes</div>
+                    <div class="text-4xl font-black font-mono tracking-tighter">{{ nodesCount }}</div>
+                    <div class="text-[9px] text-success font-bold mt-1">↑ 2 NEW SITES</div>
                   </div>
-                  <span class="text-xs font-mono font-bold text-slate-400">Orchestrating Control Plane...</span>
+                  <div class="bg-base-100/50 dark:bg-black/20 backdrop-blur-md border border-base-300/50 p-6 rounded-3xl transition-transform hover:scale-105">
+                    <div class="text-[10px] font-bold opacity-40 uppercase mb-2">Active Handshakes</div>
+                    <div class="text-4xl font-black font-mono tracking-tighter text-primary">{{ activeNodes }}</div>
+                    <div class="text-[9px] opacity-40 font-bold mt-1">ENCRYPTED (ZTA)</div>
+                  </div>
+                  <div class="bg-base-100/50 dark:bg-black/20 backdrop-blur-md border border-base-300/50 p-6 rounded-3xl transition-transform hover:scale-105">
+                    <div class="text-[10px] font-bold opacity-40 uppercase mb-2">Avg. Latency</div>
+                    <div class="text-4xl font-black font-mono tracking-tighter text-secondary">{{ latency }}<small class="text-xs font-bold ml-1">MS</small></div>
+                    <div class="text-[9px] text-primary font-bold mt-1">OPTIMIZED PATH</div>
+                  </div>
+                </div>
+
+                <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.07] pointer-events-none">
+                  <div class="w-full h-full bg-[radial-gradient(circle_at_center,var(--p)_1px,transparent_1px)] bg-[size:24px_24px]"></div>
                 </div>
               </div>
             </div>
@@ -64,120 +131,57 @@
       </div>
     </section>
 
-    <section class="py-28 px-4 bg-white/60 border-y border-slate-200/50">
-      <div class="max-w-7xl mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-
-          <div class="flex flex-col gap-6 p-2">
-            <div class="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary border border-primary/10 shadow-inner">
-              <Icon name="nodes" class="w-7 h-7" />
-            </div>
-            <div>
-              <h3 class="text-xl font-bold text-slate-900 mb-3 tracking-tight">Operator-Native CRDs</h3>
-              <p class="text-slate-500 leading-relaxed text-[15px] font-medium">
-                深度集成 Kubernetes 生态，通过声明式 CRD 定义网络状态，实现全自动化的生命周期管理与拓扑自我修复。
-              </p>
-            </div>
+    <section class="py-24 px-4 bg-base-200/30 border-y border-base-300">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
+        <div v-for="feat in features" :key="feat.title" class="flex flex-col gap-6 group">
+          <div :class="['w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-500 group-hover:rotate-6', feat.colorClass]">
+            <Icon :name="feat.icon" class="w-7 h-7" />
           </div>
-
-          <div class="flex flex-col gap-6 p-2">
-            <div class="w-14 h-14 rounded-2xl bg-emerald-500/5 flex items-center justify-center text-emerald-500 border border-emerald-500/10 shadow-inner">
-              <Icon name="policy" class="w-7 h-7" />
-            </div>
-            <div>
-              <h3 class="text-xl font-bold text-slate-900 mb-3 tracking-tight">Identity-Based Policy</h3>
-              <p class="text-slate-500 leading-relaxed text-[15px] font-medium">
-                基于身份的精细化访问控制，支持大规模节点下的动态白名单注入，将零信任（Zero Trust）贯穿于每一层封装。
-              </p>
-            </div>
+          <div>
+            <h3 class="text-xl font-bold mb-3 tracking-tight">{{ feat.title }}</h3>
+            <p class="text-sm opacity-50 leading-relaxed font-medium">{{ feat.desc }}</p>
           </div>
-
-          <div class="flex flex-col gap-6 p-2">
-            <div class="w-14 h-14 rounded-2xl bg-indigo-500/5 flex items-center justify-center text-indigo-500 border border-indigo-500/10 shadow-inner">
-              <Icon name="monitor" class="w-7 h-7" />
-            </div>
-            <div>
-              <h3 class="text-xl font-bold text-slate-900 mb-3 tracking-tight">Multipath Observability</h3>
-              <p class="text-slate-500 leading-relaxed text-[15px] font-medium">
-                内建多路径传输观测引擎，实时可视化异构网络负载，为多协议穿透场景提供毫米级的延迟感知与拓扑画像。
-              </p>
-            </div>
-          </div>
-
         </div>
       </div>
     </section>
 
-    <section class="py-28 px-4">
+    <section class="py-24 px-4">
       <div class="max-w-4xl mx-auto">
-        <div class="bg-slate-900 rounded-[3rem] p-10 md:p-16 shadow-2xl relative overflow-hidden group">
-          <div class="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] rounded-full pointer-events-none"></div>
+        <div class="bg-neutral text-neutral-content rounded-[3rem] p-12 md:p-16 shadow-2xl relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-80 h-80 bg-primary/10 blur-[100px] rounded-full"></div>
 
           <div class="relative z-10 text-center mb-10">
-            <h2 class="text-3xl font-black text-white mb-4">Infrastructure as Code</h2>
-            <p class="text-slate-400 font-medium">在任意节点执行容器化部署，即刻加入 Wireflow 自治网络</p>
+            <h2 class="text-3xl font-black mb-3 italic">Infrastructure as Code</h2>
+            <p class="opacity-50 text-sm font-medium">执行初始化命令，节点将自动通过 WireGuard 接入自治网络</p>
           </div>
 
-          <div class="mockup-code bg-black/40 border border-white/10 rounded-2xl text-[14px] p-6 shadow-inner font-mono">
-            <pre data-prefix="λ" class="text-slate-500"><code># Initialize the orchestrator node</code></pre>
+          <div class="mockup-code bg-black/40 border border-white/5 text-[14px] p-6 shadow-inner font-mono text-white/90">
+            <pre data-prefix="λ" class="opacity-30"><code># Deploying via Container</code></pre>
             <pre data-prefix="$"><code>docker run -d --privileged \</code></pre>
-            <pre data-prefix=">" class="text-primary"><code>  --name wireflow-edge \</code></pre>
             <pre data-prefix=">"><code>  -e CONTROLLER_URL="https://api.wireflow.io" \</code></pre>
-            <pre data-prefix=">"><code>  -v /lib/modules:/lib/modules \</code></pre>
             <pre data-prefix=">"><code>  ghcr.io/wireflow/edge:stable</code></pre>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="pb-24 px-4 mt-[-4rem]">
-      <div class="max-w-5xl mx-auto">
-        <div class="flex flex-col items-center">
-          <p class="text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase mb-10">
-            High-Performance Transport Backends
-          </p>
-          <div class="flex flex-wrap justify-center items-center gap-x-12 gap-y-8 opacity-40 hover:opacity-100 transition-opacity duration-500">
-            <div class="flex flex-col items-center gap-2 group">
-              <div class="text-sm font-bold tracking-tighter group-hover:text-primary transition-colors">WIREGUARD</div>
-              <div class="h-0.5 w-0 group-hover:w-full bg-primary transition-all"></div>
-            </div>
-            <div class="flex flex-col items-center gap-2 group">
-              <div class="text-sm font-bold tracking-tighter group-hover:text-primary transition-colors">UDP / KCP</div>
-              <div class="h-0.5 w-0 group-hover:w-full bg-primary transition-all"></div>
-            </div>
-            <div class="flex flex-col items-center gap-2 group">
-              <div class="text-sm font-bold tracking-tighter group-hover:text-primary transition-colors">WEBSOCKET</div>
-              <div class="h-0.5 w-0 group-hover:w-full bg-primary transition-all"></div>
-            </div>
-            <div class="flex flex-col items-center gap-2 group">
-              <div class="text-sm font-bold tracking-tighter group-hover:text-primary transition-colors">GRPC TDR</div>
-              <div class="h-0.5 w-0 group-hover:w-full bg-primary transition-all"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="py-20 bg-primary/5 border-t border-primary/10">
-      <div class="max-w-4xl mx-auto text-center px-4">
-        <h2 class="text-3xl font-black text-slate-900 mb-6 tracking-tight">准备好重构您的私有网络了吗？</h2>
-        <p class="text-slate-500 mb-10 font-medium">加入 500+ 企业开发者，体验声明式网络编排带来的效能革命。</p>
-        <div class="flex justify-center gap-4">
-          <router-link to="/dashboard" class="btn btn-primary rounded-2xl px-12 shadow-lg shadow-primary/20">
-            进入控制台
-          </router-link>
-        </div>
-      </div>
-    </section>
+    <footer class="py-12 text-center opacity-30 text-[10px] font-bold uppercase tracking-[0.4em]">
+      © 2026 Wireflow Orchestration Engine. All rights reserved.
+    </footer>
   </div>
 </template>
 
 <style scoped>
-.animate-bounce-slow {
-  animation: bounce-slow 4s infinite ease-in-out;
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
 }
-@keyframes bounce-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-15px); }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 按钮悬浮微调 */
+.btn {
+  @apply transition-all duration-300 active:scale-95;
 }
 </style>
