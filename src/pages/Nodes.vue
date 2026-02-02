@@ -2,13 +2,13 @@
 import {computed, onMounted, ref, watch, inject} from 'vue'
 import {useApi} from '@/composables/useApi'
 import {listPeer,updatePeer} from '@/api/user';
-
+import { useConfirm } from '@/composables/useConfirm' // 引入插件
 const {loading, data: result, execute: list} = useApi(listPeer, [], {immediate: true});
 const {loading:updateLoading, execute: update} = useApi(updatePeer, [], {immediate: true});
 
 // 注入全局 Toast 函数
 const toast = inject('globalToast')
-
+const { confirm } = useConfirm()
 const rows = ref([]);
 const total = ref(0);
 
@@ -101,35 +101,53 @@ const confirmDelete = (node) => {
   isDeleteModalOpen.value = true
 }
 
-const handleDelete = async () => {
-  // 这里调用你的删除接口
-  console.log('删除节点:', nodeToDelete.value.appId)
-  isDeleteModalOpen.value = false
-  await getPeers() // 刷新列表
-}
 
 const newLabelInput = ref('')
 
 // 添加标签函数
+// 添加标签函数
 const addLabel = () => {
   const val = newLabelInput.value.trim()
 
-  // 1. 防御：如果 labels 意外丢失，重新初始化
+  // 1. 防御：确保 labels 是数组
   if (!selectedNode.value.labels) {
     selectedNode.value.labels = []
   }
 
+  if (!val) return
 
-  // 2. 校验：不能为空，且不能重复
-  if (val) {
-    if (!selectedNode.value.labels.includes(val)) {
-      // 3. 响应式推入新行
-      selectedNode.value.labels.push(val)
-      console.log('当前标签列表:', selectedNode.value.labels)
-    }
-    // 4. 清空输入框以便连续添加
-    newLabelInput.value = ''
+  // 2. 解析输入的 Key (处理带 = 的情况)
+  let inputKey = ''
+  if (val.includes('=')) {
+    inputKey = val.split('=')[0].trim()
   }
+
+  // 3. 执行逻辑：如果输入包含 "="，则尝试查找并覆盖同名 Key
+  if (inputKey) {
+    // 找到数组中第一个以 "inputKey=" 开头的索引
+    const existingIndex = selectedNode.value.labels.findIndex(item => {
+      const [k] = item.split('=')
+      return k.trim() === inputKey
+    })
+
+    if (existingIndex !== -1) {
+      // 核心优化：如果找到了（例如 app=123），直接替换该项（变为 app=456）
+      selectedNode.value.labels[existingIndex] = val
+      console.log(`已更新标签: ${inputKey}`)
+    } else {
+      // 如果没找到，则正常推入
+      selectedNode.value.labels.push(val)
+    }
+  } else {
+    // 4. 处理不带 "=" 的情况（纯标签），保持不重复即可
+    if (!selectedNode.value.labels.includes(val)) {
+      selectedNode.value.labels.push(val)
+    }
+  }
+
+  // 5. 清空输入框
+  newLabelInput.value = ''
+  console.log('当前标签列表:', selectedNode.value.labels)
 }
 
 // 删除标签
@@ -148,10 +166,10 @@ const labelCount = computed(() => {
 })
 
 const saveNode = async () => {
-  loading.value = true;
+  if (drawerMode.value === 'view') return; // 防御：查看模式不准保存
 
+  loading.value = true;
   try {
-    // 1. 将数组 ['k=v'] 转换为对象 {k: v}
     const labelMap = {};
     if (selectedNode.value.labels) {
       selectedNode.value.labels.forEach(item => {
@@ -159,56 +177,26 @@ const saveNode = async () => {
           const [key, ...val] = item.split('=');
           labelMap[key.trim()] = val.join('=').trim();
         } else {
-          // 如果没有等号，可以约定 key 为标签名，value 为空或 "true"
           labelMap[item.trim()] = "true";
         }
       });
     }
 
-    // 2. 构建提交数据
     const payload = {
       ...selectedNode.value,
-      labels: labelMap,  // 覆盖为后端需要的 Map 格式
+      labels: labelMap,
       namespace: 'wf-test',
-      appId: selectedNode.appId,
-
+      // 修正：这里应该是 selectedNode.value.appId
+      appId: selectedNode.value.appId,
     };
 
-    // --- 第一步：获取当前 UI 上剩下的标签 ---
-    const currentKeys = new Set();
-    selectedNode.value.labels.forEach(item => {
-      const [key, ...val] = item.split('=');
-      const k = key.trim();
-      if (k) {
-        labelMap[k] = val.join('=').trim();
-        currentKeys.add(k);
-      }
-    });
-
-    // --- 第二步：对比原始标签（关键步骤） ---
-    // 假设我们在 openDetails 时把原始标签存到了 originalLabelsMap 里
-    if (window.originalLabelsMap) {
-      Object.keys(window.originalLabelsMap).forEach(oldKey => {
-        if (!currentKeys.has(oldKey)) {
-          // 如果原始有的 key 现在没了，说明用户删了它
-          // 将其设为 ""，后端收到后会执行 delete 操作
-          labelMap[oldKey] = "";
-        }
-      });
-    }
-
-    // 3. 调用接口
     const { success, message } = await update(payload);
-
-    console.log(success, message)
     if (success) {
-      // 成功处理：关闭抽屉、提示、刷新列表
       isDrawerOpen.value = false;
-      // alert('保存成功！'); // 建议使用你项目里的 Toast 组件
       await getPeers();
       toast("Update Peer Successfully")
     } else {
-      console.error('保存失败:', message);
+      toast(message || '保存失败', 'error')
     }
   } catch (error) {
     console.error('提交请求出错:', error);
@@ -216,6 +204,28 @@ const saveNode = async () => {
     loading.value = false;
   }
 };
+
+const handleDelete = async (node) => {
+  // 像写同步代码一样调用弹窗
+  const isConfirmed = await confirm({
+    title: '确认删除节点？',
+    message: `你正在尝试删除节点 <span class="text-error font-bold">${node.appId}</span>。此操作不可撤销。`,
+    confirmText: '立即销毁',
+    type: 'danger'
+  })
+
+  if (isConfirmed) {
+    loading.value = true
+    try {
+      // 调用你的删除 API
+      // await deletePeer(node.appId)
+      toast("Node deleted successfully")
+      await getPeers() // 刷新列表
+    } finally {
+      loading.value = false
+    }
+  }
+}
 
 onMounted(getPeers)
 </script>
@@ -246,7 +256,7 @@ onMounted(getPeers)
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
           </svg>
         </button>
-        <button class="btn btn-primary shadow-lg shadow-primary/20 rounded-xl px-8">+ 新增节点</button>
+        <button class="btn btn-primary shadow-lg shadow-primary/20 rounded-xl px-8">一键入网</button>
       </div>
     </div>
 
@@ -325,7 +335,7 @@ onMounted(getPeers)
             <button @click="openDetails(r, 'view')" class="btn btn-ghost btn-xs font-bold hover:bg-base-200">详情</button>
             <button @click="openDetails(r, 'edit')" class="btn btn-ghost btn-xs font-bold text-primary hover:bg-primary/10">编辑</button>
             <div class="w-px h-4 bg-base-300 mx-1"></div>
-            <button @click="confirmDelete(r)" class="btn btn-ghost btn-xs text-error/40 hover:text-error hover:bg-error/10">
+            <button @click="handleDelete(r)" class="btn btn-ghost btn-xs text-error/40 hover:text-error hover:bg-error/10">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
               </svg>
@@ -483,6 +493,7 @@ onMounted(getPeers)
       </div>
     </aside>
   </div>
+
 </template>
 
 <style scoped>

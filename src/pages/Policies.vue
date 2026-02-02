@@ -2,7 +2,8 @@
 import { ref } from 'vue'
 // 假设你已经创建了这些组件
 import PolicyModal from './PolicyModal.vue'
-import PolicyDeleteModal from './PolicyDeleteModal.vue'
+import { useConfirm } from '@/composables/useConfirm' // 引入插件
+const { confirm } = useConfirm()
 
 const policies = ref([
   { name: 'default-allow', mode: 'allow', updatedAt: '2026-01-10', description: '允许所有节点互通' },
@@ -42,6 +43,28 @@ const handleSave = async (payload) => {
     // 这里可以加一个成功的 Toast 提示
   } catch (err) {
     alert("保存失败: " + (err.response?.data?.error || err.message))
+  }
+}
+
+const handleDelete = async (node) => {
+  // 像写同步代码一样调用弹窗
+  const isConfirmed = await confirm({
+    title: '确认删除策略？',
+    message: `你正在尝试删除策略 <span class="text-error font-bold">${node.appId}</span>。此操作不可撤销。`,
+    confirmText: '立即销毁',
+    type: 'danger'
+  })
+
+  if (isConfirmed) {
+    loading.value = true
+    try {
+      // 调用你的删除 API
+      // await deletePeer(node.appId)
+      toast("Node deleted successfully")
+      await getPeers() // 刷新列表
+    } finally {
+      loading.value = false
+    }
   }
 }
 </script>
@@ -122,7 +145,7 @@ const handleSave = async (payload) => {
             <button class="btn btn-ghost btn-sm text-xs font-bold hover:bg-base-300" @click="openModal('view', p)">查看</button>
             <button class="btn btn-ghost btn-sm text-xs font-bold text-primary hover:bg-primary/10" @click="openModal('edit', p)">编辑</button>
             <div class="w-px h-4 bg-base-300 mx-1"></div>
-            <button class="btn btn-ghost btn-sm text-error/40 hover:text-error" @click="openDelete(p)">
+            <button class="btn btn-ghost btn-sm text-error/40 hover:text-error" @click="handleDelete(p)">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </button>
           </div>
@@ -136,12 +159,6 @@ const handleSave = async (payload) => {
         :data="activePolicy"
         @close="isModalOpen = false"
         @save="handleSave"
-    />
-
-    <PolicyDeleteModal
-        :show="isDeleteOpen"
-        :name="activePolicy?.name"
-        @close="isDeleteOpen = false"
     />
 
   </div>

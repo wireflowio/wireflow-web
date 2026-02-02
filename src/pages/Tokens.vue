@@ -1,7 +1,8 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { getEnrollmentToken } from '@/api/wireflow';
-
+import { useConfirm } from '@/composables/useConfirm' // 引入插件
+const { confirm } = useConfirm()
 const loading = ref(false);
 const tokens = ref([]);
 const showModal = ref(false);
@@ -38,6 +39,29 @@ const handleCopyCommand = async (token) => {
     console.error('复制失败', err);
   }
 };
+
+
+const handleDelete = async (token) => {
+  // 像写同步代码一样调用弹窗
+  const isConfirmed = await confirm({
+    title: '确认删除Token？',
+    message: `你正在尝试删除Token <span class="text-error font-bold">${token}</span>。此操作不可撤销。`,
+    confirmText: '立即销毁',
+    type: 'danger'
+  })
+
+  if (isConfirmed) {
+    loading.value = true
+    try {
+      // 调用你的删除 API
+      // await deletePeer(node.appId)
+      toast("Node deleted successfully")
+      await getPeers() // 刷新列表
+    } finally {
+      loading.value = false
+    }
+  }
+}
 
 onMounted(loadData);
 </script>
@@ -121,7 +145,7 @@ onMounted(loadData);
               一键加入
             </button>
             <div class="divider divider-horizontal mx-1"></div>
-            <button class="btn btn-ghost btn-sm text-error/40 hover:text-error hover:bg-error/10">吊销</button>
+            <button class="btn btn-ghost btn-sm text-error/40 hover:text-error hover:bg-error/10" @click="handleDelete(t.token)">删除</button>
           </div>
         </div>
       </div>
