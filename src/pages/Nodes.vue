@@ -3,6 +3,7 @@ import {computed, inject, onMounted, ref, watch} from 'vue'
 import {useApi} from '@/composables/useApi'
 import {listPeer, updatePeer} from '@/api/user';
 import SideDrawer from '@/components/SideDrawer.vue'
+import Pagination from '@/components/Pagination.vue'
 import {useConfirm} from '@/composables/useConfirm' // 引入插件
 const {loading, data: result, execute: list} = useApi(listPeer, [], {immediate: true});
 const {loading: updateLoading, execute: update} = useApi(updatePeer, [], {immediate: true});
@@ -102,14 +103,6 @@ const refreshNodes = async () => {
   }
 }
 
-
-// const openDetails = (node, mode = 'view') => {
-//
-//   drawerMode.value = mode
-//   isDrawerOpen.value = true
-//   drawerMode.value = mode
-//   isDrawerOpen.value = true
-// }
 
 // 删除二次确认状态
 const isDeleteModalOpen = ref(false)
@@ -389,33 +382,12 @@ onMounted(getPeers)
           </div>
         </div>
 
-        <div v-if="rows.length > 0"
-             class="p-4 px-6 bg-base-200/10 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div class="text-xs font-medium opacity-60">
-            显示 {{ (params.page - 1) * params.pageSize + 1 }} - {{ Math.min(params.page * params.pageSize, total) }}
-            / 共 {{ total }} 条记录
-          </div>
-
-          <div class="join shadow-sm">
-            <button
-                class="join-item btn btn-xs btn-outline border-base-300 hover:bg-base-300"
-                :disabled="params.page === 1"
-                @click="params.page--"
-            >«
-            </button>
-
-            <button class="join-item btn btn-xs btn-outline border-base-300 no-animation">
-              Page {{ params.page }} / {{ Math.ceil(total / params.pageSize) || 1 }}
-            </button>
-
-            <button
-                class="join-item btn btn-xs btn-outline border-base-300 hover:bg-base-300"
-                :disabled="params.page >= Math.ceil(total / params.pageSize)"
-                @click="params.page++"
-            >»
-            </button>
-          </div>
-        </div>
+        <Pagination
+            v-model:page="params.page"
+            v-model:pageSize="params.pageSize"
+            :total="total"
+            item-name="节点"
+        />
 
         <div v-if="rows.length === 0" class="p-20 text-center opacity-30 flex flex-col items-center">
           <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

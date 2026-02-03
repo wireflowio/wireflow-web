@@ -6,8 +6,8 @@ export const createNetwork = (name) => request.post('/networks', { name });
 
 // --- Token 管理 ---
 // 获取指定网络的入网 Token 及其安装指令
-export const getEnrollmentToken = () =>
-    request.get(`/tokens`);
+export const listTokens = (data) =>
+    request.get(`/tokens`, data);
 
 // --- 节点管理 (Peers) ---
 export const getPeers = (networkId) =>
@@ -23,11 +23,3 @@ export const updatePolicy = (networkId, policyData) =>
 export const deletePolicy = (networkId, policyData) =>
     request.delete(`/networks/${networkId}/policies`, policyData);
 
-// 导出所有 API
-export default {
-    getNetworks,
-    createNetwork,
-    getEnrollmentToken,
-    getPeers,
-    updatePolicy
-};

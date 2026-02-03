@@ -1,29 +1,58 @@
 <script setup>
-import { onMounted, ref } from 'vue';
-import { getEnrollmentToken } from '@/api/wireflow';
+import { onMounted, ref ,inject} from 'vue';
+import { listTokens } from '@/api/wireflow';
 import { useConfirm } from '@/composables/useConfirm' // 引入插件
+import Pagination from '@/components/Pagination.vue'
+import {useApi} from '@/composables/useApi'
 const { confirm } = useConfirm()
-const loading = ref(false);
 const tokens = ref([]);
 const showModal = ref(false);
+// 注入全局 Toast 函数
+const toast = inject('globalToast')
 const installCommand = ref("curl -sL https://wireflow.io/i.sh | sh -s -- --token YOUR_TOKEN_HERE");
 const copied = ref(false);
 
-const loadData = async () => {
-  loading.value = true;
+const total = ref(0);
+const {loading, data: result, execute: list} = useApi(listTokens, [], {immediate: true});
+
+const params = ref({
+  page: 1,
+  pageSize: 4,
+  search: '',
+  namespace: 'wf-test',
+  total: 0,
+})
+
+const getTokens = async () => {
+  loading.value = true
   try {
-    const data = await getEnrollmentToken();
-    tokens.value = data || [];
+    const { success, data } = await list(params.value)
+
+    if (success) {
+      // 即使 data.list 是空的，也要赋值，这样页面才会清空
+      tokens.value = data?.list || []
+      total.value = data?.total || 0
+
+    } else {
+      // 请求失败，清空列表并提示
+      tokens.value = []
+      total.value = 0
+    }
+    toast("Tokens list successfully")
   } catch (err) {
-    console.error(err);
+    tokens.value = []
+    toast("网络请求异常", "error")
   } finally {
-    loading.value = false;
+    // 无论结果如何，800ms 后关闭 loading
+    setTimeout(() => {
+      loading.value = false
+    }, 800)
   }
 }
 
 const refreshTokens = () => {
   loading.value = true
-  loadData();
+  getTokens();
   setTimeout(() => (loading.value = false), 800)
 }
 
@@ -63,7 +92,7 @@ const handleDelete = async (token) => {
   }
 }
 
-onMounted(loadData);
+onMounted(getTokens);
 </script>
 
 <template>
@@ -110,11 +139,6 @@ onMounted(loadData);
       <div class="divide-y divide-base-300">
         <div v-if="loading" class="p-20 text-center"><span class="loading loading-spinner loading-lg text-primary"></span></div>
 
-        <div v-else-if="tokens.length === 0" class="p-20 text-center opacity-30 flex flex-col items-center">
-          <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-          <p class="text-sm">尚未创建任何 Token</p>
-        </div>
-
         <div v-for="t in tokens" :key="t.token" class="group flex flex-col md:flex-row items-center justify-between gap-4 p-4 px-6 hover:bg-base-200/50 transition-colors">
 
           <div class="flex items-center gap-4 w-full md:w-2/5">
@@ -148,6 +172,23 @@ onMounted(loadData);
             <button class="btn btn-ghost btn-sm text-error/40 hover:text-error hover:bg-error/10" @click="handleDelete(t.token)">删除</button>
           </div>
         </div>
+
+        <!-- 分页部分 -->
+        <Pagination
+            v-model:page="params.page"
+            v-model:pageSize="params.pageSize"
+            :total="total"
+            item-name="密钥"
+        />
+
+        <div v-if="tokens.length === 0" class="p-20 text-center opacity-30 flex flex-col items-center">
+          <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          <p class="text-sm font-bold">未找到匹配的密钥</p>
+        </div>
+
       </div>
     </div>
 
