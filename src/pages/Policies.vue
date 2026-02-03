@@ -1,66 +1,119 @@
 <script setup>
-import {computed, ref, watch} from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import {computed, onMounted, ref, inject, watch} from 'vue'
+import {useRoute} from 'vue-router'
+import SideDrawer from '@/components/SideDrawer.vue'
+import Pagination from '@/components/Pagination.vue'
+// 假设你已经创建了这些组件
+import {useConfirm} from '@/composables/useConfirm'
+import {listPolicy} from '@/api/user';
+import {useApi} from "@/composables/useApi.js";
+
+// 注入全局 Toast 函数
+const toast = inject('globalToast')
+const route = useRoute()
+const total = ref(0);
+const {confirm} = useConfirm()
+
+const params = ref({
+  page: 1,
+  pageSize: 4,
+  search: '',
+  namespace: 'wf-test',
+  total: 0,
+})
+
+const policies = ref([
+  // {name: 'default-allow', mode: 'allow', updatedAt: '2026-01-10', description: '允许所有节点互通'},
+  // {name: 'office-only', mode: 'deny', updatedAt: '2026-01-18', description: '仅限办公室 IP 访问'},
+  // {name: 'office2-only', mode: 'deny', updatedAt: '2026-01-18', description: '仅限办公室 IP 访问'},
+  // {name: 'default-allow2222', mode: 'allow', updatedAt: '2026-01-10', description: '允许所有节点互通'},
+])
+
+const {loading, data: result, execute: list} = useApi(listPolicy, [], {immediate: true});
+
+// 监听搜索词变化，搜索时自动跳回第一页
+watch(() => params.value.page, () => {
+  listPolicies()
+})
+
+const listPolicies = async () => {
+  loading.value = true
+  try {
+    const { success, data } = await list(params.value)
+
+    if (success) {
+      // 即使 data.list 是空的，也要赋值，这样页面才会清空
+      policies.value = data?.list || []
+      total.value = data?.total || 0
+
+    } else {
+      // 请求失败，清空列表并提示
+      policies.value = []
+      total.value = 0
+    }
+    toast("Policy list successfully")
+  } catch (err) {
+    policies.value = []
+    toast("网络请求异常", "error")
+  } finally {
+    // 无论结果如何，800ms 后关闭 loading
+    setTimeout(() => {
+      loading.value = false
+    }, 800)
+  }
+}
+
+const refreshPolicies = async () => {
+  loading.value = true
+  const success = await listPolicies(params)
+  if (!success) {
+    setTimeout(() => {
+      loading.value = false
+    }, 800)
+  }
+}
+
+
 const props = defineProps({
   show: Boolean,
   type: String, // 'create' | 'edit' | 'view'
   data: Object
 })
-const route = useRoute()
-
-import SideDrawer from '@/components/SideDrawer.vue'
-// 假设你已经创建了这些组件
-import PolicyModal from './PolicyModal.vue'
-import { useConfirm } from '@/composables/useConfirm'
-import drawer from "daisyui/components/drawer/index.js"; // 引入插件
-const { confirm } = useConfirm()
-
-const policies = ref([
-  { name: 'default-allow', mode: 'allow', updatedAt: '2026-01-10', description: '允许所有节点互通' },
-  { name: 'office-only', mode: 'deny', updatedAt: '2026-01-18', description: '仅限办公室 IP 访问' },
-  { name: 'office2-only', mode: 'deny', updatedAt: '2026-01-18', description: '仅限办公室 IP 访问' },
-  { name: 'default-allow2222', mode: 'allow', updatedAt: '2026-01-10', description: '允许所有节点互通' },
-])
 
 const modalType = ref('') // 'create', 'edit', 'view'
 const isModalOpen = ref(false)
-const isDeleteOpen = ref(false)
 const activePolicy = ref(null)
 
 const openModal = (type, policy = null) => {
   modalType.value = type
-  activePolicy.value = policy ? { ...policy } : { name: '', mode: 'allow', description: '' }
+  activePolicy.value = policy ? {...policy} : {name: '', mode: 'allow', description: ''}
   isModalOpen.value = true
 }
 
-const openDelete = (policy) => {
-  activePolicy.value = policy
-  isDeleteOpen.value = true
-}
 
 // 3. 处理保存 (响应子组件的 @save)
-const handleSave = async (payload) => {
-  try {
-    // 根据是新建还是编辑，走不同的 API 路径
-    if (modalType.value === 'create') {
-      // await axios.post('/api/v1/policies', payload)
-    } else {
-      // await axios.put(`/api/v1/policies/${payload.name}`, payload)
-    }
+const handleCreate = async () => {
+  console.log('正在创建策略:', form.value)
+  // 模拟 API 调用
+  const {success, data} = await createPolicy(form.value)
+  toast("策略新建成功，已同步至集群")
+  isDrawerOpen.value = false
+  // 刷新列表数据逻辑...
 
-    isModalOpen.value = false // 关闭弹窗
-    // await fetchPolicies()     // 刷新列表数据
-    // 这里可以加一个成功的 Toast 提示
-  } catch (err) {
-    alert("保存失败: " + (err.response?.data?.error || err.message))
-  }
+
 }
 
-const handleDelete = async (node) => {
+const handleUpdate = async () => {
+  console.log('正在更新策略:', form.value)
+  toast("策略更新成功")
+  isDrawerOpen.value = false
+}
+
+const handleDelete = async (policy) => {
   // 像写同步代码一样调用弹窗
   const isConfirmed = await confirm({
     title: '确认删除策略？',
-    message: `你正在尝试删除策略 <span class="text-error font-bold">${node.appId}</span>。此操作不可撤销。`,
+    message: `你正在尝试删除策略 <span class="text-error font-bold">${policy.name}</span>。此操作不可撤销。`,
     confirmText: '立即销毁',
     type: 'danger'
   })
@@ -69,7 +122,7 @@ const handleDelete = async (node) => {
     loading.value = true
     try {
       // 调用你的删除 API
-      // await deletePeer(node.appId)
+      // await deletePeer(policy.appId)
       toast("Node deleted successfully")
       await getPeers() // 刷新列表
     } finally {
@@ -83,7 +136,16 @@ const drawerType = ref('view') // 'view', 'edit', 'create'
 
 const openDrawer = (type, policy) => {
   drawerType.value = type
-  activePolicy.value = policy ? { ...policy } : { name: '', mode: 'allow' }
+
+  // if (type === 'create') {
+  //   // 关键：新建时，初始化一个空的结构
+  //   form.value = getEmptyPolicy()
+  // } else if (policy) {
+  //   // 编辑或查看时，克隆传入的数据
+  //   form.value = JSON.parse(JSON.stringify(policy))
+  // }
+
+  activePolicy.value = policy ? {...policy} : {name: '', mode: 'allow'}
   isDrawerOpen.value = true
 }
 
@@ -101,7 +163,7 @@ const policy = computed(() => ({
 // 1. 完整的数据结构骨架
 const getEmptyPolicy = () => ({
   name: '',
-  podSelector: { matchLabels: { app: '' } },
+  podSelector: {matchLabels: {app: ''}},
   policyTypes: ['Ingress'], // 默认只开启入站
   ingress: [],
   egress: []
@@ -118,7 +180,7 @@ watch(() => props.show, (isOpen) => {
       form.value = {
         ...base,
         ...incoming,
-        podSelector: { matchLabels: { ...base.podSelector.matchLabels, ...incoming.podSelector?.matchLabels } },
+        podSelector: {matchLabels: {...base.podSelector.matchLabels, ...incoming.podSelector?.matchLabels}},
         ingress: incoming.ingress || [],
         egress: incoming.egress || []
       }
@@ -140,27 +202,27 @@ const applyTemplate = (key) => {
     },
     db: {
       name: 'db-protection',
-      podSelector: { matchLabels: { app: 'postgres' } },
+      podSelector: {matchLabels: {app: 'postgres'}},
       policyTypes: ['Ingress'],
       ingress: [{
-        from: [{ podSelector: { matchLabels: { role: 'backend' } } }],
-        ports: [{ protocol: 'TCP', port: '5432' }]
+        from: [{podSelector: {matchLabels: {role: 'backend'}}}],
+        ports: [{protocol: 'TCP', port: '5432'}]
       }]
     },
     internet: {
       name: 'allow-egress-to-any',
       policyTypes: ['Egress'],
-      egress: [{ to: [], ports: [{ protocol: 'TCP', port: '443' }] }] // to 为空代表任意目标
+      egress: [{to: [], ports: [{protocol: 'TCP', port: '443'}]}] // to 为空代表任意目标
     }
   }
-  form.value = { ...base, ...templates[key] }
+  form.value = {...base, ...templates[key]}
 }
 
 // 4. 动态规则添加
 const addRule = (direction) => {
   const newRule = direction === 'ingress'
-      ? { from: [{ podSelector: { matchLabels: { role: '' } } }], ports: [{ protocol: 'TCP', port: '' }] }
-      : { to: [{ podSelector: { matchLabels: { role: '' } } }], ports: [{ protocol: 'TCP', port: '' }] }
+      ? {from: [{podSelector: {matchLabels: {role: ''}}}], ports: [{protocol: 'TCP', port: ''}]}
+      : {to: [{podSelector: {matchLabels: {role: ''}}}], ports: [{protocol: 'TCP', port: ''}]}
   form.value[direction].push(newRule)
 }
 
@@ -188,15 +250,22 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
   }
   return yaml
 })
+
+
+onMounted(listPolicies)
 </script>
 <template>
   <div class="max-w-7xl mx-auto p-4 lg:p-8 space-y-6">
 
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-base-300 pb-6">
+    <div
+        class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-base-300 pb-6">
       <div>
         <h1 class="text-3xl font-extrabold tracking-tight flex items-center gap-3">
           <div class="p-2 bg-primary/10 rounded-xl">
-            <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+            <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
           </div>
           策略管理中心
         </h1>
@@ -204,9 +273,19 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
           此处负责定义集群内的网络隔离与访问控制。通过配置 **NetworkPolicy**，您可以精确控制 Pod 之间的流量走向，构建零信任安全架构。
         </p>
       </div>
-      <button class="btn btn-primary btn-md shadow-lg shadow-primary/20 rounded-xl px-8" @click="openModal('create')">
-        + 新建策略
-      </button>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost border-base-300 rounded-xl" @click="refreshPolicies">
+          <svg :class="['w-4 h-4', loading ? 'animate-spin' : '']" fill="none" stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+        <button class="btn btn-primary btn-md shadow-lg shadow-primary/20 rounded-xl px-8"
+                @click="openDrawer('create')">
+          + 新建策略
+        </button>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -238,8 +317,11 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
     <div class="bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
       <div class="p-4 bg-base-200/30 border-b border-base-300 flex items-center gap-4">
         <div class="relative flex-1 max-w-md">
-          <svg class="w-4 h-4 absolute left-3 top-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-          <input class="input input-bordered input-sm w-full pl-10 bg-base-100" placeholder="按名称或描述搜索策略..." />
+          <svg class="w-4 h-4 absolute left-3 top-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input class="input input-bordered input-sm w-full pl-10 bg-base-100" placeholder="按名称或描述搜索策略..."/>
         </div>
         <div class="hidden sm:flex gap-2 text-[10px] font-bold opacity-40 uppercase">
           Sorted by: Updated At
@@ -253,7 +335,9 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
           <div class="flex items-center gap-4 w-full md:w-1/3">
             <div :class="[p.mode === 'allow' ? 'bg-success' : 'bg-error', 'w-2 h-2 rounded-full']"></div>
             <div>
-              <div class="font-bold text-sm group-hover:text-primary transition-colors cursor-pointer" @click="openModal('view', p)">{{ p.name }}</div>
+              <div class="font-bold text-sm group-hover:text-primary transition-colors cursor-pointer"
+                   @click="openModal('view', p)">{{ p.name }}
+              </div>
               <div class="text-[10px] opacity-40 font-mono">{{ p.updatedAt }}</div>
             </div>
           </div>
@@ -263,27 +347,48 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
           </div>
 
           <div class="flex items-center gap-2 shrink-0">
-            <button class="btn btn-ghost btn-sm text-xs font-bold hover:bg-base-300" @click="openDrawer('view', p)">查看</button>
-            <button class="btn btn-ghost btn-sm text-xs font-bold text-primary hover:bg-primary/10" @click="openDrawer('edit', p)">编辑</button>
+            <button class="btn btn-ghost btn-sm text-xs font-bold hover:bg-base-300" @click="openDrawer('view', p)">
+              查看
+            </button>
             <div class="w-px h-4 bg-base-300 mx-1"></div>
             <button class="btn btn-ghost btn-sm text-error/40 hover:text-error" @click="handleDelete(p)">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
             </button>
           </div>
         </div>
+
+        <!-- 分页部分 -->
+        <Pagination
+            v-model:page="params.page"
+            v-model:pageSize="params.pageSize"
+            :total="total"
+            item-name="策略"
+        />
+
+        <div v-if="policies.length === 0" class="p-20 text-center opacity-30 flex flex-col items-center">
+          <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          <p class="text-sm font-bold">未找到匹配的策略</p>
+        </div>
+
       </div>
     </div>
 
     <SideDrawer
         v-model="isDrawerOpen"
-        :title="drawerType === 'view' ? '策略详情' : '配置策略'"
-        subtitle="Deep Orchestration"
+        :title="drawerType === 'view' ? '策略详情' : (drawerType === 'create' ? '新建安全策略' : '编辑策略')"
+        subtitle="Network Security Orchestration"
         :level="drawerType === 'view' ? 'md' : 'lg'"
     >
       <template #icon>
         <div class="p-2 bg-primary rounded-lg text-white">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <path stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
           </svg>
         </div>
       </template>
@@ -292,13 +397,17 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
         <div class="space-y-8">
           <div class="relative p-6 rounded-2xl bg-primary/5 border border-primary/20 overflow-hidden">
             <div class="absolute right-[-20px] top-[-20px] opacity-10">
-              <svg class="w-32 h-32 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5-10-5-10 5z" /></svg>
+              <svg class="w-32 h-32 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5-10-5-10 5z"/>
+              </svg>
             </div>
             <div class="relative z-10">
               <span class="text-[10px] font-bold text-primary uppercase tracking-widest">受保护的目标 / Target</span>
               <h3 class="text-2xl font-black mt-1">{{ policy.name }}</h3>
               <div class="flex gap-2 mt-3">
-                <div class="badge badge-primary font-mono px-3 py-3">app: {{ policy.podSelector?.matchLabels?.app || '所有 Pod' }}</div>
+                <div class="badge badge-primary font-mono px-3 py-3">app:
+                  {{ policy.podSelector?.matchLabels?.app || '所有 Pod' }}
+                </div>
               </div>
               <p class="text-xs opacity-50 mt-4 leading-relaxed">
                 此策略将应用于集群中带有上述标签的所有 Pod，控制它们的网络进出权限。
@@ -309,10 +418,13 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
           <div class="grid grid-cols-1 gap-6">
 
             <div class="collapse collapse-arrow bg-base-200/50 border border-base-300 rounded-2xl">
-              <input type="checkbox" checked />
+              <input type="checkbox" checked/>
               <div class="collapse-title flex items-center gap-4">
                 <div class="p-2 bg-secondary/10 text-secondary rounded-lg">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14" /></svg>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 16l-4-4m0 0l4-4m-4 4h14"/>
+                  </svg>
                 </div>
                 <div>
                   <h4 class="font-bold">入站白名单 (Ingress)</h4>
@@ -321,13 +433,19 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
               </div>
               <div class="collapse-content space-y-3">
                 <div v-if="!policy.ingress?.length" class="alert bg-error/5 text-error text-xs border-error/10">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                  </svg>
                   <span>全隔离模式：拒绝所有外部连接直达此服务。</span>
                 </div>
-                <div v-for="rule in policy.ingress" class="flex items-center gap-4 p-3 bg-base-100 rounded-xl border border-base-300 shadow-sm">
+                <div v-for="rule in policy.ingress"
+                     class="flex items-center gap-4 p-3 bg-base-100 rounded-xl border border-base-300 shadow-sm">
                   <div class="flex-1">
                     <div class="text-[10px] opacity-40 font-bold uppercase">允许来自</div>
-                    <div class="text-sm font-mono font-bold text-secondary">role: {{ rule.from[0]?.podSelector?.matchLabels?.role || 'Any' }}</div>
+                    <div class="text-sm font-mono font-bold text-secondary">role:
+                      {{ rule.from[0]?.podSelector?.matchLabels?.role || 'Any' }}
+                    </div>
                   </div>
                   <div class="divider divider-horizontal mx-0 opacity-20"></div>
                   <div class="w-24">
@@ -339,10 +457,12 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
             </div>
 
             <div class="collapse collapse-arrow bg-base-200/50 border border-base-300 rounded-2xl">
-              <input type="checkbox" checked />
+              <input type="checkbox" checked/>
               <div class="collapse-title flex items-center gap-4">
                 <div class="p-2 bg-accent/10 text-accent rounded-lg">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l4 4m0 0l-4 4m4-4H3" /></svg>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l4 4m0 0l-4 4m4-4H3"/>
+                  </svg>
                 </div>
                 <div>
                   <h4 class="font-bold">出站白名单 (Egress)</h4>
@@ -353,10 +473,13 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
                 <div v-if="!policy.egress?.length" class="alert bg-error/5 text-error text-xs border-error/10">
                   <span>全隔离模式：此服务禁止主动发起任何外部请求。</span>
                 </div>
-                <div v-for="rule in policy.egress" class="flex items-center gap-4 p-3 bg-base-100 rounded-xl border border-base-300 shadow-sm">
+                <div v-for="rule in policy.egress"
+                     class="flex items-center gap-4 p-3 bg-base-100 rounded-xl border border-base-300 shadow-sm">
                   <div class="flex-1">
                     <div class="text-[10px] opacity-40 font-bold uppercase">允许访问</div>
-                    <div class="text-sm font-mono font-bold text-accent">role: {{ rule.to[0]?.podSelector?.matchLabels?.role || 'Any' }}</div>
+                    <div class="text-sm font-mono font-bold text-accent">role:
+                      {{ rule.to[0]?.podSelector?.matchLabels?.role || 'Any' }}
+                    </div>
                   </div>
                   <div class="divider divider-horizontal mx-0 opacity-20"></div>
                   <div class="w-24">
@@ -377,24 +500,70 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
           <div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
 
             <section>
-              <h4 class="text-[10px] font-bold opacity-40 mb-3 uppercase tracking-tighter">Quick Templates / 场景快选</h4>
+              <h4 class="text-[10px] font-bold opacity-40 mb-3 uppercase tracking-tighter">Quick Templates /
+                场景快选</h4>
               <div class="flex flex-wrap gap-2">
                 <button @click="applyTemplate('isolate')" class="btn btn-xs btn-outline rounded-full">🚫 全隔离</button>
                 <button @click="applyTemplate('db')" class="btn btn-xs btn-outline rounded-full">🔐 数据库保护</button>
-                <button @click="applyTemplate('internet')" class="btn btn-xs btn-outline rounded-full">🌐 允许出站</button>
+                <button @click="applyTemplate('internet')" class="btn btn-xs btn-outline rounded-full">🌐 允许出站
+                </button>
               </div>
             </section>
 
             <div class="grid grid-cols-2 gap-4">
-              <div class="form-control">
-                <label class="label"><span class="label-text font-bold opacity-70">策略名称</span></label>
-                <input v-model="form.name" type="text" class="input input-bordered font-mono text-sm shadow-inner" placeholder="policy-name" />
+              <div class="relative">
+    <span
+        class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
+      Policy Name / 策略名称
+    </span>
+                <input v-model="form.name" type="text"
+                       class="input input-bordered w-full bg-base-100 font-mono text-sm focus:border-primary pt-2 shadow-sm"
+                       placeholder=""/>
               </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text font-bold opacity-70">生效目标 (app=)</span></label>
-                <input v-model="form.podSelector.matchLabels.app" class="input input-bordered font-mono text-sm shadow-inner" placeholder="nginx" />
+
+              <div class="relative">
+    <span
+        class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
+      Target / 生效目标
+    </span>
+                <input v-model="form.podSelector.matchLabels.app" type="text"
+                       class="input input-bordered w-full bg-base-100 font-mono text-sm focus:border-primary pt-2 shadow-sm"
+                       placeholder="target"/>
               </div>
+
+              <div class="relative">
+    <span
+        class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
+      Policy / 策略模式
+    </span>
+                <select v-model="form.mode" class="select select-bordered font-bold text-sm shadow-inner">
+                  <option value="allow">允许 (Allow)</option>
+                  <option value="deny">拒绝 (Deny)</option>
+                </select>
+              </div>
+
             </div>
+
+            <div class="relative">
+                <span
+                    class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
+                  策略描述 / 备注
+                </span>
+              <textarea
+                  v-model="form.description"
+                  class="textarea textarea-bordered h-20 leading-tight text-sm shadow-inner"
+                  placeholder="描述此策略的用途，例如：生产环境数据库访问控制..."
+              ></textarea>
+            </div>
+
+            <!--            <div class="form-control">-->
+            <!--              <label class="label"><span class="label-text font-bold opacity-70">策略描述 / 备注</span></label>-->
+            <!--              <textarea-->
+            <!--                  v-model="form.description"-->
+            <!--                  class="textarea textarea-bordered h-20 leading-tight text-sm shadow-inner"-->
+            <!--                  placeholder="描述此策略的用途，例如：生产环境数据库访问控制..."-->
+            <!--              ></textarea>-->
+            <!--            </div>-->
 
             <div class="form-control">
               <label class="label"><span class="label-text font-bold opacity-70">生效方向 (Policy Types)</span></label>
@@ -412,24 +581,31 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
             <div v-if="form.policyTypes.includes('Ingress')" class="space-y-4">
               <div class="flex justify-between items-center border-b border-secondary/20 pb-2">
                 <h4 class="text-sm font-bold text-secondary flex items-center gap-2">
-                  <div class="w-2 h-2 rounded-full bg-secondary"></div> Ingress 入站规则
+                  <div class="w-2 h-2 rounded-full bg-secondary"></div>
+                  Ingress 入站规则
                 </h4>
-                <button @click="addRule('ingress')" class="btn btn-ghost btn-xs text-secondary hover:bg-secondary/10">+ 添加</button>
+                <button @click="addRule('ingress')" class="btn btn-ghost btn-xs text-secondary hover:bg-secondary/10">+
+                  添加
+                </button>
               </div>
-              <div v-if="form.ingress.length === 0" class="text-center p-6 bg-base-200/30 rounded-2xl border-2 border-dashed border-base-300 opacity-40 italic text-xs">
+              <div v-if="form.ingress.length === 0"
+                   class="text-center p-6 bg-base-200/30 rounded-2xl border-2 border-dashed border-base-300 opacity-40 italic text-xs">
                 隔离模式：拒绝所有入站流量
               </div>
-              <div v-for="(rule, idx) in form.ingress" :key="'in-'+idx" class="card bg-base-200/50 border border-base-300 relative overflow-hidden transition-all hover:border-secondary/40">
+              <div v-for="(rule, idx) in form.ingress" :key="'in-'+idx"
+                   class="card bg-base-200/50 border border-base-300 relative overflow-hidden transition-all hover:border-secondary/40">
                 <div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
                 <div class="card-body p-4 grid grid-cols-2 gap-4">
                   <div class="form-control">
                     <span class="text-[9px] uppercase font-bold opacity-40 mb-1">From Role Label</span>
-                    <input v-model="rule.from[0].podSelector.matchLabels.role" class="input input-sm input-bordered font-mono" placeholder="backend" />
+                    <input v-model="rule.from[0].podSelector.matchLabels.role"
+                           class="input input-sm input-bordered font-mono" placeholder="backend"/>
                   </div>
                   <div class="form-control">
                     <span class="text-[9px] uppercase font-bold opacity-40 mb-1">Target Port</span>
                     <div class="flex gap-2">
-                      <input v-model="rule.ports[0].port" class="input input-sm input-bordered font-mono grow" placeholder="80" />
+                      <input v-model="rule.ports[0].port" class="input input-sm input-bordered font-mono grow"
+                             placeholder="80"/>
                       <button @click="form.ingress.splice(idx, 1)" class="btn btn-ghost btn-xs text-error">✕</button>
                     </div>
                   </div>
@@ -440,24 +616,30 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
             <div v-if="form.policyTypes.includes('Egress')" class="space-y-4 pt-4">
               <div class="flex justify-between items-center border-b border-accent/20 pb-2">
                 <h4 class="text-sm font-bold text-accent flex items-center gap-2">
-                  <div class="w-2 h-2 rounded-full bg-accent"></div> Egress 出站规则
+                  <div class="w-2 h-2 rounded-full bg-accent"></div>
+                  Egress 出站规则
                 </h4>
-                <button @click="addRule('egress')" class="btn btn-ghost btn-xs text-accent hover:bg-accent/10">+ 添加</button>
+                <button @click="addRule('egress')" class="btn btn-ghost btn-xs text-accent hover:bg-accent/10">+ 添加
+                </button>
               </div>
-              <div v-if="form.egress.length === 0" class="text-center p-6 bg-base-200/30 rounded-2xl border-2 border-dashed border-base-300 opacity-40 italic text-xs">
+              <div v-if="form.egress.length === 0"
+                   class="text-center p-6 bg-base-200/30 rounded-2xl border-2 border-dashed border-base-300 opacity-40 italic text-xs">
                 隔离模式：拒绝所有出站流量
               </div>
-              <div v-for="(rule, idx) in form.egress" :key="'eg-'+idx" class="card bg-base-200/50 border border-base-300 relative overflow-hidden transition-all hover:border-accent/40">
+              <div v-for="(rule, idx) in form.egress" :key="'eg-'+idx"
+                   class="card bg-base-200/50 border border-base-300 relative overflow-hidden transition-all hover:border-accent/40">
                 <div class="absolute left-0 top-0 bottom-0 w-1 bg-accent"></div>
                 <div class="card-body p-4 grid grid-cols-2 gap-4">
                   <div class="form-control">
                     <span class="text-[9px] uppercase font-bold opacity-40 mb-1">To Role Label</span>
-                    <input v-model="rule.to[0].podSelector.matchLabels.role" class="input input-sm input-bordered font-mono" placeholder="database" />
+                    <input v-model="rule.to[0].podSelector.matchLabels.role"
+                           class="input input-sm input-bordered font-mono" placeholder="database"/>
                   </div>
                   <div class="form-control">
                     <span class="text-[9px] uppercase font-bold opacity-40 mb-1">Destination Port</span>
                     <div class="flex gap-2">
-                      <input v-model="rule.ports[0].port" class="input input-sm input-bordered font-mono grow" placeholder="5432" />
+                      <input v-model="rule.ports[0].port" class="input input-sm input-bordered font-mono grow"
+                             placeholder="5432"/>
                       <button @click="form.egress.splice(idx, 1)" class="btn btn-ghost btn-xs text-error">✕</button>
                     </div>
                   </div>
@@ -467,11 +649,17 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
           </div>
 
           <div class="w-80 bg-neutral flex flex-col border-l border-base-300 hidden lg:flex shadow-2xl">
-            <div class="px-4 py-3 bg-black/30 text-[10px] font-bold text-slate-400 tracking-widest flex justify-between items-center border-b border-white/5">
+            <div
+                class="px-4 py-3 bg-black/30 text-[10px] font-bold text-slate-400 tracking-widest flex justify-between items-center border-b border-white/5">
               <span>LIVE YAML PREVIEW</span>
-              <div class="flex gap-1"><div class="w-2 h-2 rounded-full bg-red-500/50"></div><div class="w-2 h-2 rounded-full bg-yellow-500/50"></div><div class="w-2 h-2 rounded-full bg-green-500/50"></div></div>
+              <div class="flex gap-1">
+                <div class="w-2 h-2 rounded-full bg-red-500/50"></div>
+                <div class="w-2 h-2 rounded-full bg-yellow-500/50"></div>
+                <div class="w-2 h-2 rounded-full bg-green-500/50"></div>
+              </div>
             </div>
-            <div class="flex-1 p-5 font-mono text-[11px] text-emerald-400/90 leading-relaxed overflow-auto scrollbar-hide select-all whitespace-pre">
+            <div
+                class="flex-1 p-5 font-mono text-[11px] text-emerald-400/90 leading-relaxed overflow-auto scrollbar-hide select-all whitespace-pre">
               {{ yamlPreview }}
             </div>
           </div>
@@ -481,9 +669,21 @@ ${form.value.policyTypes.map(t => `    - ${t}`).join('\n')}`
 
       <template #footer>
         <div class="flex gap-3">
-          <button v-if="drawerType === 'view'" class="btn btn-primary flex-1" @click="drawerType = 'edit'">编辑</button>
-          <button v-else class="btn btn-primary flex-1">策略下发</button>
-          <button class="btn btn-ghost border-base-300 flex-1" @click="isDrawerOpen = false">取消</button>
+          <button v-if="drawerType === 'view'" class="btn btn-primary flex-1" @click="drawerType = 'edit'">
+            编辑
+          </button>
+
+          <button v-else-if="drawerType === 'create'" class="btn btn-primary flex-1" @click="handleCreate">
+            立即创建
+          </button>
+
+          <button v-else class="btn btn-primary flex-1" @click="handleSave(form)">
+            保存更新
+          </button>
+
+          <button class="btn btn-ghost border-base-300 flex-1" @click="isDrawerOpen = false">
+            取消
+          </button>
         </div>
       </template>
     </SideDrawer>
