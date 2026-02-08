@@ -34,6 +34,16 @@ const handleLogin = async () => {
     }, 1200) // 1.2秒后执行
   }
 }
+
+const handleSocialLogin = (provider: string) => {
+  const clientId = 'wireflow-server'
+  const redirectUri = encodeURIComponent('http://localhost:8080/auth/callback')
+  // 注意：Dex 支持通过链接直接触发特定的 Connector
+  // 在 URL 后面加上 &connector_id=xxx 可以跳过 Dex 的选择页面
+  const dexUrl = `http://localhost:5556/dex/auth?client_id=${clientId}&response_type=code&scope=openid+profile+email&redirect_uri=${redirectUri}&state=login_${provider}`
+
+  window.location.href = dexUrl
+}
 </script>
 
 <template>
@@ -134,6 +144,32 @@ const handleLogin = async () => {
             <span v-if="isLoading" class="loading loading-spinner loading-xs"></span>
             {{ isLoading ? '正在验证身份...' : '进入控制面' }}
           </button>
+
+          <div class="relative my-8">
+            <div class="absolute inset-0 flex items-center">
+              <span class="w-full border-t border-slate-100 dark:border-white/5"></span>
+            </div>
+            <div class="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+              <span class="bg-white/60 dark:bg-slate-900 px-4 text-slate-400">快速访问</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-4">
+            <button @click="handleSocialLogin('github')" type="button" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-slate-100/50 dark:bg-white/5 hover:bg-slate-200/50 dark:hover:bg-white/10 transition-all group">
+              <svg class="w-6 h-6 text-slate-900 dark:text-white group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+              <span class="text-[9px] font-black uppercase tracking-tight text-slate-500">GitHub</span>
+            </button>
+
+            <button @click="handleSocialLogin('google')" type="button" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-slate-100/50 dark:bg-white/5 hover:bg-slate-200/50 dark:hover:bg-white/10 transition-all group">
+              <svg class="w-6 h-6 group-hover:scale-110 transition-transform" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c3.11 0 5.72-1.01 7.64-2.74l-3.57-2.77c-.98.66-2.23 1.06-3.87 1.06-2.98 0-5.51-2.02-6.41-4.74H2.18v2.87C4.09 20.41 7.76 23 12 23z" fill="#34A853"/><path d="M5.59 13.81c-.23-.66-.36-1.37-.36-2.11 0-.74.13-1.45.36-2.11V6.73H2.18C1.41 8.28 1 10.09 1 12s.41 3.72 1.18 5.27l3.41-2.66z" fill="#FBBC05"/><path d="M12 5.38c1.69 0 3.21.58 4.41 1.72l3.31-3.31C17.71 1.86 15.11 1 12 1 7.76 1 4.09 3.59 2.18 6.73l3.41 2.66C6.49 6.64 9.02 5.38 12 5.38z" fill="#EA4335"/></svg>
+              <span class="text-[9px] font-black uppercase tracking-tight text-slate-500">Google</span>
+            </button>
+
+            <button @click="handleSocialLogin('ldap')" type="button" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-slate-100/50 dark:bg-white/5 hover:bg-slate-200/50 dark:hover:bg-white/10 transition-all group">
+              <svg class="w-6 h-6 text-slate-900 dark:text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="text-[9px] font-black uppercase tracking-tight text-slate-500">AD/LDAP</span>
+            </button>
+          </div>
         </form>
 
         <div class="mt-10 text-center">

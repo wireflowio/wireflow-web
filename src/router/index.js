@@ -15,6 +15,7 @@ import Home from '../pages/Home.vue'
 import Login from '../pages/Login.vue'
 import Members from "../pages/Members.vue";
 import Register from "../pages/Register.vue";
+import LoginSuccess from "../pages/LoginSuccess.vue";
 
 const routes = [
     // 主页面：不带 SideNav
@@ -32,16 +33,17 @@ const routes = [
         component: BlankLayout,
         children: [
             { path: 'login', name: 'login', component: Login, meta: { title: '登录' } },
-        ],
-    },
-
-    // 注册页：空白布局
-    {
-        path: '/',
-        component: BlankLayout,
-        children: [
             { path: 'register', name: 'register', component: Register, meta: { title: '注册' } },
+            // 添加登录成功中转页
+            {
+                path: 'login/success',
+                name: 'loginSuccess',
+                component: LoginSuccess,
+                meta: { title: '登录成功' }
+            },
+
         ],
+
     },
 
     {

@@ -1,29 +1,68 @@
-<script setup lang="ts">
-import { onMounted, ref } from 'vue'
+<script setup>
+import { onMounted, ref, inject} from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
+
+import {getMe} from '@/api/user';
+import {useApi} from '@/composables/useApi'
+
+// 注入全局 Toast 函数
+const toast = inject('globalToast')
+
+const user = ref({
+  name: '',
+  email: '',
+  userId: '',
+  role: '',
+  avatarUrl: 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp',
+})
+
+const params = ref({
+  token: ''
+})
+
+const {loading, data: result, execute: getMeInfo} = useApi(getMe, [], {immediate: true});
 
 const router = useRouter()
 const { theme, toggleTheme } = useTheme()
 
-const user = ref({
-  name: 'Administrator',
-  role: 'Cluster Admin',
-  email: 'admin@wireflow.local',
-  avatarUrl: 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp',
-})
+// const user = ref({
+//   name: 'Administrator',
+//   role: 'Cluster Admin',
+//   email: 'admin@wireflow.local',
+//   avatarUrl: 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp',
+// })
 
 const handleLogout = () => {
   localStorage.removeItem('wf_user')
   router.push('/login')
 }
 
-onMounted(() => {
-  const savedUser = localStorage.getItem('wf_user')
-  if (savedUser) {
-    const parsed = JSON.parse(savedUser)
-    user.value = { ...user.value, ...parsed }
+const getMeData = async () => {
+  loading.value = true
+  try {
+    const { success, data } = await getMeInfo(params.value)
+
+    if (success) {
+      user.value = data
+
+    }
+    toast("info update successfully")
+  } catch (err) {
+    toast("网络请求异常", "error")
+  } finally {
+    // 无论结果如何，800ms 后关闭 loading
+    setTimeout(() => {
+      loading.value = false
+    }, 800)
   }
+}
+
+
+onMounted(() => {
+  var token = localStorage.getItem("wf_token")
+  params.value.token = token
+  getMeData()
 })
 </script>
 
@@ -84,7 +123,8 @@ onMounted(() => {
             <div tabindex="0" role="button" class="btn btn-ghost h-10 px-1.5 rounded-xl hover:bg-base-200/50 dark:hover:bg-white/5 flex items-center gap-2 transition-all ml-2">
               <div class="avatar">
                 <div class="w-7 h-7 rounded-lg ring-1 ring-base-content/10">
-                  <img :src="user.avatarUrl" />
+                  <img src="https://ui-avatars.com/api/?name=Francis&background=random" />
+<!--                  <span class="text-xl uppercase">{{ user.email.charAt(0) }}</span>-->
                 </div>
               </div>
               <svg class="w-3 h-3 opacity-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"></path></svg>
