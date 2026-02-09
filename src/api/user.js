@@ -8,6 +8,6 @@ export const listPeer = (data) => request.get('/peers/list', data);
 export const updatePeer = (data) => request.put('/peers/update', data);
 
 export const listPolicy = (data) => request.get('/policies/list', data);
-export const updatePolicy = (data) => request.put('/policies/update', data);
+export const createPolicy = (data) => request.post('/policies/create', data);
 
 export const getMe = (data) => request.get("/users/getme", data)
