@@ -1,26 +1,29 @@
 <script setup>
 import {computed, inject, onMounted, ref, watch} from 'vue'
-import {useApi} from '@/composables/useApi'
+import {useAction, useTable} from '@/composables/useApi'
 import {listPeer, updatePeer} from '@/api/user';
 import SideDrawer from '@/components/SideDrawer.vue'
 import Pagination from '@/components/Pagination.vue'
 import {useConfirm} from '@/composables/useConfirm' // 引入插件
-const {loading, data: result, execute: list} = useApi(listPeer, [], {immediate: true});
-const {loading: updateLoading, execute: update} = useApi(updatePeer, [], {immediate: true});
 
-// 注入全局 Toast 函数
-const toast = inject('globalToast')
-const {confirm} = useConfirm()
-const rows = ref([]);
-const total = ref(0);
-
-const params = ref({
-  page: 1,
-  pageSize: 4,
-  search: '',
-  namespace: 'wf-test',
-  total: 0,
+// 1. 列表自动管理（含自动报错 Toast）
+const {rows, total, loading, params, refresh} = useTable(listPeer, {
+  successMsg: '刷新列表成功',
+  errorMsg: '刷新列表失败',
+  initialParams: {namespace: 'wf-test'}
 })
+
+const {loading: updating, execute: runUpdate} = useAction(updatePeer, {
+  successMsg: '节点信息已同步',
+  errorMsg: '更新失败',
+  onSuccess: () => {
+    isDrawerOpen.value = false // 成功后关闭抽屉
+    refresh()                  // 成功后刷新列表
+  }
+});
+
+const {confirm} = useConfirm()
+
 
 const isDrawerOpen = ref(false)
 const drawerType = ref('view') // 'view', 'edit', 'create'
@@ -59,49 +62,6 @@ const selectedNode = ref({
   namespace: '',
   name: '',
 })
-
-
-// 监听搜索词变化，搜索时自动跳回第一页
-watch(() => params.value.page, () => {
-  getPeers()
-})
-
-const getPeers = async () => {
-  loading.value = true
-  try {
-    const { success, data, message } = await list(params.value)
-
-    if (success) {
-      // 即使 data.list 是空的，也要赋值，这样页面才会清空
-      rows.value = data?.list || []
-      total.value = data?.total || 0
-
-    } else {
-      // 请求失败，清空列表并提示
-      rows.value = []
-      total.value = 0
-    }
-    toast("Peer update successfully")
-  } catch (err) {
-    rows.value = []
-    toast("网络请求异常", "error")
-  } finally {
-    // 无论结果如何，800ms 后关闭 loading
-    setTimeout(() => {
-      loading.value = false
-    }, 800)
-  }
-}
-
-const refreshNodes = async () => {
-  loading.value = true
-  const success = await getPeers(params)
-  if (!success) {
-    setTimeout(() => {
-      loading.value = false
-    }, 800)
-  }
-}
 
 
 // 删除二次确认状态
@@ -177,42 +137,29 @@ const labelCount = computed(() => {
   return selectedNode.value.labels.length
 })
 
-const saveNode = async () => {
-  loading.value = true;
-  try {
-    const labelMap = {};
-    if (selectedNode.value.labels) {
-      selectedNode.value.labels.forEach(item => {
-        if (item.includes('=')) {
-          const [key, ...val] = item.split('=');
-          labelMap[key.trim()] = val.join('=').trim();
-        } else {
-          labelMap[item.trim()] = "true";
-        }
-      });
-    }
-
-    const payload = {
-      ...selectedNode.value,
-      labels: labelMap,
-      namespace: 'wf-test',
-      // 修正：这里应该是 selectedNode.value.appId
-      appId: selectedNode.value.appId,
-    };
-
-    const {success, message} = await update(payload);
-    if (success) {
-      isDrawerOpen.value = false;
-      await getPeers();
-      toast("Update Peer Successfully")
-    } else {
-      toast(message || '保存失败', 'error')
-    }
-  } catch (error) {
-    console.error('提交请求出错:', error);
-  } finally {
-    loading.value = false;
+const handleSave = async () => {
+  const labelMap = {};
+  if (selectedNode.value.labels) {
+    selectedNode.value.labels.forEach(item => {
+      if (item.includes('=')) {
+        const [key, ...val] = item.split('=');
+        labelMap[key.trim()] = val.join('=').trim();
+      } else {
+        labelMap[item.trim()] = "true";
+      }
+    });
   }
+
+  const payload = {
+    ...selectedNode.value,
+    labels: labelMap,
+    namespace: 'wf-test',
+    // 修正：这里应该是 selectedNode.value.appId
+    appId: selectedNode.value.appId,
+  };
+
+  await runUpdate(payload);
+
 };
 
 const handleDelete = async (node) => {
@@ -236,8 +183,6 @@ const handleDelete = async (node) => {
     }
   }
 }
-
-onMounted(getPeers)
 </script>
 
 <template>
@@ -259,7 +204,7 @@ onMounted(getPeers)
         </p>
       </div>
       <div class="flex gap-2">
-        <button class="btn btn-ghost border-base-300 rounded-xl" @click="refreshNodes">
+        <button class="btn btn-ghost border-base-300 rounded-xl" @click="refresh">
           <svg :class="['w-4 h-4', loading ? 'animate-spin' : '']" fill="none" stroke="currentColor"
                viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -357,7 +302,7 @@ onMounted(getPeers)
 
           <div class="hidden md:flex flex-col md:col-span-2">
             <span class="text-[9px] uppercase font-bold opacity-30 tracking-widest">网络</span>
-            <span class="badge badge-ghost badge-sm font-mono border-base-300 w-fit">{{ r.Network}}</span>
+            <span class="badge badge-ghost badge-sm font-mono border-base-300 w-fit">{{ r.Network }}</span>
           </div>
 
           <div class="hidden md:flex flex-col md:col-span-3">
@@ -438,7 +383,8 @@ onMounted(getPeers)
 
             <div class="bg-base-200/50 p-6 rounded-2xl space-y-6 border border-base-300">
               <div class="relative">
-    <span class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
+    <span
+        class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
       App ID / 节点标识
     </span>
                 <input v-model="selectedNode.appId" type="text"
@@ -447,19 +393,22 @@ onMounted(getPeers)
               </div>
 
               <div class="relative">
-              <span class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
+              <span
+                  class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
       Public Key / 密钥
     </span>
-              <input v-model="selectedNode.publicKey" type="text"
-                     class="input input-bordered w-full bg-base-100 font-mono text-sm focus:border-primary pt-2 shadow-sm"
-                     placeholder="e.g. edge-server-01"/>
-            </div>
+                <input v-model="selectedNode.publicKey" type="text"
+                       class="input input-bordered w-full bg-base-100 font-mono text-sm focus:border-primary pt-2 shadow-sm"
+                       placeholder="e.g. edge-server-01"/>
+              </div>
 
               <div class="relative">
-    <span class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
+    <span
+        class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
       Region / 所属区域
     </span>
-                <select v-model="selectedNode.region" class="select select-bordered w-full bg-base-100 font-bold text-sm shadow-sm">
+                <select v-model="selectedNode.region"
+                        class="select select-bordered w-full bg-base-100 font-bold text-sm shadow-sm">
                   <option disabled selected>请选择区域</option>
                   <option>China-Guangzhou</option>
                   <option>USA-Oregon</option>
@@ -503,8 +452,8 @@ onMounted(getPeers)
                     <span class="text-xs font-black font-mono text-primary/80 italic">#</span>
                     <span class="text-xs font-bold opacity-80">{{ label }}</span>
                     <button v-if="drawerType === 'edit'"
-                        @click="removeLabel(index)"
-                        class="ml-1 hover:text-error transition-colors"
+                            @click="removeLabel(index)"
+                            class="ml-1 hover:text-error transition-colors"
                     >
                       <svg class="w-3.5 h-3.5 opacity-20 group-hover:opacity-100" fill="none" stroke="currentColor"
                            viewBox="0 0 24 24">
@@ -534,7 +483,8 @@ onMounted(getPeers)
 
           <div class="bg-base-200/50 p-6 rounded-2xl space-y-6 border border-base-300">
             <div class="relative">
-    <span class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
+    <span
+        class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
       App ID / 节点标识
     </span>
               <input v-model="selectedNode.appId" type="text"
@@ -543,7 +493,8 @@ onMounted(getPeers)
             </div>
 
             <div class="relative">
-    <span class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
+    <span
+        class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
       Public Key / 密钥
     </span>
               <input v-model="selectedNode.publicKey" type="text"
@@ -552,10 +503,12 @@ onMounted(getPeers)
             </div>
 
             <div class="relative">
-    <span class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
+    <span
+        class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
       Region / 所属区域
     </span>
-              <select v-model="selectedNode.region" class="select select-bordered w-full bg-base-100 font-bold text-sm shadow-sm">
+              <select v-model="selectedNode.region"
+                      class="select select-bordered w-full bg-base-100 font-bold text-sm shadow-sm">
                 <option disabled selected>请选择区域</option>
                 <option>China-Guangzhou</option>
                 <option>USA-Oregon</option>
@@ -623,7 +576,7 @@ onMounted(getPeers)
       <template #footer>
         <div class="flex gap-3">
           <button v-if="drawerType === 'view'" class="btn btn-primary flex-1" @click="drawerType = 'edit'">编辑</button>
-          <button v-else class="btn btn-primary flex-1" @click="saveNode">保存</button>
+          <button v-else class="btn btn-primary flex-1" @click="handleSave">保存</button>
           <button class="btn btn-ghost border-base-300 flex-1" @click="isDrawerOpen = false">取消</button>
         </div>
       </template>

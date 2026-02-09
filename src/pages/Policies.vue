@@ -6,68 +6,22 @@ import Pagination from '@/components/Pagination.vue'
 // 假设你已经创建了这些组件
 import {useConfirm} from '@/composables/useConfirm'
 import {createPolicy, listPolicy} from '@/api/user';
-import {useApi} from "@/composables/useApi.js";
+import {useTable, useApi} from "@/composables/useApi.js";
 
 // 注入全局 Toast 函数
 const toast = inject('globalToast')
 const route = useRoute()
-const total = ref(0);
 const {confirm} = useConfirm()
 
-const params = ref({
-  page: 1,
-  pageSize: 4,
-  search: '',
-  namespace: 'wf-test',
-  total: 0,
+// 1. 列表自动管理（含自动报错 Toast）
+const {rows, total, loading, params, refresh} = useTable(listPolicy, {
+  successMsg: '刷新列表成功',
+  errorMsg: '刷新列表失败',
+  initialParams: {namespace: 'wf-test'}
 })
 
-const policies = ref([])
 
-const {loading, data: result, execute: list} = useApi(listPolicy, [], {immediate: true});
 const {execute: create} = useApi(createPolicy)
-
-// 监听搜索词变化，搜索时自动跳回第一页
-watch(() => params.value.page, () => {
-  listPolicies()
-})
-
-const listPolicies = async () => {
-  loading.value = true
-  try {
-    const {success, data} = await list(params.value)
-
-    if (success) {
-      // 即使 data.list 是空的，也要赋值，这样页面才会清空
-      policies.value = data?.list || []
-      total.value = data?.total || 0
-
-    } else {
-      // 请求失败，清空列表并提示
-      policies.value = []
-      total.value = 0
-    }
-    toast("Policy list successfully")
-  } catch (err) {
-    policies.value = []
-    toast("网络请求异常", "error")
-  } finally {
-    // 无论结果如何，800ms 后关闭 loading
-    setTimeout(() => {
-      loading.value = false
-    }, 800)
-  }
-}
-
-const refreshPolicies = async () => {
-  loading.value = true
-  const success = await listPolicies(params)
-  if (!success) {
-    setTimeout(() => {
-      loading.value = false
-    }, 800)
-  }
-}
 
 
 const props = defineProps({
@@ -144,7 +98,7 @@ const handleCreateOrUpdate = async () => {
     const {success, data} = await create(payload)
 
     if (success) {
-      refreshPolicies()
+      refresh()
       toast("创建策略成功，列表刷新成功")
     } else {
       toast("创建策略失败")
@@ -175,7 +129,7 @@ const handleDelete = async (policy) => {
       // 调用你的删除 API
       await deletePolicy(form.value)
       toast("Policy deleted successfully")
-      await listPolicies() // 刷新列表
+      await refresh() // 刷新列表
     } finally {
       loading.value = false
     }
@@ -314,7 +268,6 @@ spec:
   return yaml
 })
 
-onMounted(listPolicies)
 </script>
 <template>
   <div class="max-w-7xl mx-auto p-4 lg:p-8 space-y-6">
@@ -336,7 +289,7 @@ onMounted(listPolicies)
         </p>
       </div>
       <div class="flex gap-2">
-        <button class="btn btn-ghost border-base-300 rounded-xl" @click="refreshPolicies">
+        <button class="btn btn-ghost border-base-300 rounded-xl" @click="refresh">
           <svg :class="['w-4 h-4', loading ? 'animate-spin' : '']" fill="none" stroke="currentColor"
                viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -354,7 +307,7 @@ onMounted(listPolicies)
       <div class="stats shadow-sm border border-base-300 bg-base-100">
         <div class="stat">
           <div class="stat-title text-xs font-bold uppercase">已部署策略</div>
-          <div class="stat-value text-2xl font-mono">{{ policies.length }}</div>
+          <div class="stat-value text-2xl font-mono">{{ rows.length }}</div>
           <div class="stat-desc font-mono mt-1">Active Rules</div>
         </div>
       </div>
@@ -362,7 +315,7 @@ onMounted(listPolicies)
         <div class="stat">
           <div class="stat-title text-xs font-bold uppercase text-success">允许访问 (Allow)</div>
           <div class="stat-value text-2xl font-mono text-success">
-            {{ policies.filter(p => p.mode === 'allow').length }}
+            {{ rows.filter(p => p.mode === 'allow').length }}
           </div>
           <div class="stat-desc">Whitelist mode</div>
         </div>
@@ -392,11 +345,11 @@ onMounted(listPolicies)
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
           </svg>
           <input v-model="params.search"
-                 @keyup.enter="listPolicies"
+                 @keyup.enter="refresh"
                  class="input input-bordered input-sm w-full pl-10 bg-base-100 focus:border-primary"
                  placeholder="搜索节点名称、IP 地址..."/>
           <button
-              @click="listPolicies"
+              @click="refresh"
               class="absolute right-2 top-1.5 btn btn-ghost btn-xs opacity-50 hover:opacity-100"
           >
             Enter
@@ -408,29 +361,29 @@ onMounted(listPolicies)
       </div>
 
       <div class="divide-y divide-base-300">
-        <div v-for="p in policies" :key="p.name"
+        <div v-for="r in rows" :key="r.name"
              class="group flex flex-col md:flex-row items-center justify-between gap-4 p-4 px-6 hover:bg-base-200/50 transition-colors">
 
           <div class="flex items-center gap-4 w-full md:w-1/3">
-            <div :class="[p.mode === 'allow' ? 'bg-success' : 'bg-error', 'w-2 h-2 rounded-full']"></div>
+            <div :class="[r.mode === 'allow' ? 'bg-success' : 'bg-error', 'w-2 h-2 rounded-full']"></div>
             <div>
               <div class="font-bold text-sm group-hover:text-primary transition-colors cursor-pointer"
-                   @click="openDrawer('view', p)">{{ p.name }}
+                   @click="openDrawer('view', r)">{{ r.name }}
               </div>
-              <div class="text-[10px] opacity-40 font-mono">{{ p.updatedAt }}</div>
+              <div class="text-[10px] opacity-40 font-mono">{{ r.updatedAt }}</div>
             </div>
           </div>
 
           <div class="hidden md:block flex-1 text-xs opacity-50 truncate">
-            {{ p.description || '此策略暂无详细备注说明。' }}
+            {{ r.description || '此策略暂无详细备注说明。' }}
           </div>
 
           <div class="flex items-center gap-2 shrink-0">
-            <button class="btn btn-ghost btn-sm text-xs font-bold hover:bg-base-300" @click="openDrawer('view', p)">
+            <button class="btn btn-ghost btn-sm text-xs font-bold hover:bg-base-300" @click="openDrawer('view', r)">
               详情
             </button>
             <div class="w-px h-4 bg-base-300 mx-1"></div>
-            <button class="btn btn-ghost btn-sm text-error/40 hover:text-error" @click="handleDelete(p)">
+            <button class="btn btn-ghost btn-sm text-error/40 hover:text-error" @click="handleDelete(r)">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -447,7 +400,7 @@ onMounted(listPolicies)
             item-name="策略"
         />
 
-        <div v-if="policies.length === 0" class="p-20 text-center opacity-30 flex flex-col items-center">
+        <div v-if="rows.length === 0" class="p-20 text-center opacity-30 flex flex-col items-center">
           <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
                 d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
