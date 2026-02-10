@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 // 1. 统计数据定义
 const stats = [
   { label: '在线节点', value: '12', trend: '+2', trendUp: true, color: 'text-emerald-500', barWidth: 'w-2/3' },

@@ -1,5 +1,10 @@
 <script setup>
-import { ref, provide } from 'vue'
+import {ref, provide} from 'vue'
+
+// import { useUserStore } from '@/stores/user'
+
+// const userStore = useUserStore()
+
 const toast = ref({
   show: false,
   message: '',
@@ -15,6 +20,20 @@ const showToast = (msg, type = 'success') => {
 
 // 关键：将函数提供给所有子组件
 provide('globalToast', showToast)
+
+
+// onMounted(async() => {
+//   const token = localStorage.getItem('wf_token')
+//   if (token) {
+//     try {
+//       // 刷新页面后，在这里重新拉取最新数据
+//       await userStore.fetchUserInfo()
+//     } catch (err) {
+//       console.error('Session expired')
+//     }
+//   }
+// })
+
 </script>
 <template>
   <router-view />
