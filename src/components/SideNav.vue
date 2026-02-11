@@ -1,49 +1,100 @@
 <script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import Icon from './icons/Icon.vue'
 
 const route = useRoute()
+const router = useRouter()
 
-const items = [
-  {
-    group: '核心',
+// 1. 模拟当前选中的 Workspace 数据 (实际应从 Pinia/Vuex 获取)
+// 这里的逻辑：如果当前路由包含 /ws/，则认为在某个空间内
+const currentWsId = computed(() => route.params.wsId)
+const activeWs = computed(() => {
+  if (!currentWsId.value) return null
+  // 模拟从列表找当前空间名
+  return { id: currentWsId.value, name: '智能工厂 A 区' }
+})
+
+// 2. 模拟空间列表 (切换器使用)
+const workspaces = ref([
+  { id: 'ws-101', name: '智能工厂 A 区' },
+  { id: 'ws-102', name: '边缘网关测试' },
+])
+
+// 3. 菜单定义
+const menuGroups = computed(() => {
+  const groups = []
+
+  // A. 空间内功能 (仅当选中 Workspace 时显示)
+  if (currentWsId.value) {
+    groups.push({
+      group: `空间控制: ${activeWs.value?.name}`,
+      children: [
+        { name: '网络拓扑', to: `/ws/${currentWsId.value}/topology`, icon: 'topology' },
+        { name: '节点管理', to: `/ws/${currentWsId.value}/nodes`, icon: 'nodes' },
+        { name: 'Token 管理', to: `/ws/${currentWsId.value}/tokens`, icon: 'token' },
+        { name: '策略管理', to: `/ws/${currentWsId.value}/policies`, icon: 'policy' },
+        { name: '实时监控', to: `/ws/${currentWsId.value}/monitor`, icon: 'monitor' },
+      ],
+    })
+  }
+
+  // B. 全局管理
+  groups.push({
+    group: '全局管理',
     children: [
       { name: '仪表盘', to: '/dashboard', icon: 'dashboard' },
+      { name: '工作空间', to: '/workspace', icon: 'workspace' },
+      { name: '对等连接', to: '/peering', icon: 'peering' },
+      { name: '用户中心', to: '/user', icon: 'user' },
     ],
-  },
-  {
-    group: '组网管理',
-    children: [
-      { name: '网络拓扑', to: '/topology', icon: 'topology' },
-      { name: '节点管理', to: '/nodes', icon: 'nodes' },
-      { name: 'Token 管理', to: '/tokens', icon: 'token' },
-      { name: '策略管理', to: '/policies', icon: 'policy' },
-      { name: 'DNS 配置', to: '/dns', icon: 'dns' },
-    ],
-  },
-  {
-    group: '运维中心',
-    children: [
-      { name: '实时监控', to: '/monitor', icon: 'monitor' },
-    ],
-  },
-  {
-    group: '用户中心',
-    children: [
-      { name: '用户', to: '/user', icon: 'monitor' },
-    ],
-  }
-]
+  })
 
-const activePath = computed(() => route.path)
+  return groups
+})
+
+const isPathActive = (path) => route.path.startsWith(path)
+
+const switchWorkspace = (id) => {
+  router.push(`/ws/${id}/nodes`)
+}
 </script>
 
 <template>
-  <aside class="lg:sticky lg:top-[88px] max-h-[calc(100vh-120px)] flex flex-col gap-6 overflow-y-auto custom-sidebar pb-4">
+  <aside class="lg:sticky lg:top-[88px] max-h-[calc(100vh-120px)] flex flex-col gap-4 overflow-y-auto custom-sidebar pb-4">
+
+    <div class="dropdown w-full">
+      <div tabindex="0" role="button" class="flex items-center gap-3 p-3 bg-white/60 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-md transition-all group active:scale-95">
+        <div class="w-10 h-10 rounded-2xl bg-primary text-primary-content flex items-center justify-center font-bold shadow-lg shadow-primary/20">
+          {{ activeWs ? activeWs.name[0] : 'W' }}
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Workspace</div>
+          <div class="text-sm font-bold truncate text-slate-700">
+            {{ activeWs ? activeWs.name : '选择工作空间' }}
+          </div>
+        </div>
+        <Icon name="chevron-down" class="w-4 h-4 opacity-30 group-hover:opacity-100 transition-all" />
+      </div>
+
+      <ul tabindex="0" class="dropdown-content z-[50] menu p-2 shadow-2xl bg-base-100 rounded-2xl w-full mt-2 border border-base-300">
+        <li v-for="ws in workspaces" :key="ws.id">
+          <a @click="switchWorkspace(ws.id)" :class="{ 'active': currentWsId === ws.id }" class="flex items-center gap-3 p-3 rounded-xl">
+            <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-xs">{{ ws.name[0] }}</div>
+            <span class="text-sm font-medium">{{ ws.name }}</span>
+          </a>
+        </li>
+        <div class="divider my-1 opacity-50"></div>
+        <li>
+          <router-link to="/workspace" class="text-primary font-bold flex items-center gap-2">
+            <Icon name="plus" class="w-4 h-4" /> 管理所有空间
+          </router-link>
+        </li>
+      </ul>
+    </div>
 
     <div class="bg-white/40 backdrop-blur-md rounded-3xl border border-slate-200/60 p-3 shadow-sm shrink-0">
-      <div v-for="(group, idx) in items" :key="group.group">
+      <div v-for="(group, idx) in menuGroups" :key="group.group">
         <div class="px-4 text-[10px] uppercase font-bold tracking-[0.15em] text-slate-400 mb-2" :class="{ 'mt-6': idx !== 0 }">
           {{ group.group }}
         </div>
@@ -53,13 +104,13 @@ const activePath = computed(() => route.path)
             <router-link
                 :to="c.to"
                 class="flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all duration-300 group"
-                :class="activePath === c.to
+                :class="isPathActive(c.to)
                 ? 'bg-primary text-primary-content shadow-md shadow-primary/20 font-semibold'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
             >
               <Icon :name="c.icon" class="w-4 h-4 transition-transform group-hover:scale-110" />
               <span class="text-sm tracking-wide">{{ c.name }}</span>
-              <div v-if="activePath === c.to" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-content opacity-60"></div>
+              <div v-if="isPathActive(c.to)" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-content opacity-60"></div>
             </router-link>
           </li>
         </ul>
@@ -69,12 +120,10 @@ const activePath = computed(() => route.path)
     <div class="mt-auto bg-white/60 backdrop-blur-md rounded-3xl border border-slate-200/60 overflow-hidden shadow-sm group transition-all hover:shadow-md shrink-0">
       <router-link to="/profile" class="block p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-primary font-bold shadow-inner">
-            AD
-          </div>
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-primary font-bold shadow-inner">AD</div>
           <div class="flex-1 min-w-0">
             <div class="text-sm font-bold truncate">Admin User</div>
-            <div class="text-[10px] opacity-40 truncate">admin@wireflow.local</div>
+            <div class="text-[10px] opacity-40 truncate">Enterprise Plan</div>
           </div>
           <Icon name="chevron-right" class="w-4 h-4 opacity-20 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
         </div>
@@ -91,27 +140,19 @@ const activePath = computed(() => route.path)
             <span class="text-[10px] font-bold text-success uppercase">Healthy</span>
           </div>
         </div>
-
-        <div class="flex items-center justify-between text-[11px]">
-          <span class="opacity-50 italic">版本号</span>
-          <span class="font-mono font-bold opacity-80">v0.1.2-alpha</span>
-        </div>
       </div>
     </div>
   </aside>
 </template>
 
 <style scoped>
-/* 极致隐藏滚动条 */
 .custom-sidebar {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 .custom-sidebar::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
 }
-
-/* 激活状态的轻微弹跳感 */
 .router-link-active {
   transform: scale(1.02) translateX(4px);
 }
