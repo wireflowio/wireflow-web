@@ -243,12 +243,14 @@ const parseLabel = (str) => {
 const yamlPreview = computed(() => {
   const target = parseLabel(form.value._targetLabel);
 
-  let yaml = `...
+  let yaml = `apiVersion: wireflowcontroller.wireflow.run/v1alpha1
+kind: WireflowPolicy
+metadata:
+  name: ${form.value.name || 'new-policy'}
 spec:
   peerSelector:
     matchLabels:
-      ${target.key}: ${target.value}
-  ...`
+      ${target.key}: ${target.value}`
 
   if (form.value.policyTypes.includes('Ingress')) {
     yaml += `\n  ingress:`
