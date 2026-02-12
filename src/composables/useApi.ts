@@ -36,6 +36,11 @@ export function useApi(apiFunc) {
     }
 }
 
+export interface PageParams {
+    page: number,
+    pageSize: number,
+}
+
 
 // src/composables/useTable.ts
 //分页使用
@@ -55,7 +60,7 @@ export function useTable(apiFunc, options = {}) {
     const total = ref(0)
 
     // 初始化参数
-    const params = ref({
+    const params: PageParams = ref({
         page: 1,
         pageSize: 4,
         search: '',
