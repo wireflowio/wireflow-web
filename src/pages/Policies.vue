@@ -1,11 +1,11 @@
-<script setup>
+<script setup lang="ts">
 import {computed, inject, onMounted, ref, watch} from 'vue'
 import {useRoute} from 'vue-router'
 import SideDrawer from '@/components/SideDrawer.vue'
 import Pagination from '@/components/Pagination.vue'
 // 假设你已经创建了这些组件
 import {useConfirm} from '@/composables/useConfirm'
-import {createPolicy, listPolicy} from '@/api/user';
+import {createPolicy, listPolicy} from '@/api/policy';
 import {useTable, useApi} from "@/composables/useApi.js";
 
 // 注入全局 Toast 函数

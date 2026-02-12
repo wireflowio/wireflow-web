@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import {computed, inject, onMounted, ref, watch} from 'vue'
 import {useAction, useTable} from '@/composables/useApi'
 import {listPeer, updatePeer} from '@/api/user';

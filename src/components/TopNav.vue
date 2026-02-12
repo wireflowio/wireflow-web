@@ -1,9 +1,10 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref, inject, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useTheme } from '../composables/useTheme'
+import { useTheme} from '../composables/useTheme'
+
 import { getMe } from '@/api/user';
-import { useApi } from '@/composables/useApi'
+import { useAction } from '@/composables/useApi'
 
 const toast = inject('globalToast')
 const route = useRoute()
@@ -24,7 +25,14 @@ const params = ref({ token: '' })
 // 当前 Workspace 标识（多租户核心）
 const currentWorkspace = computed(() => route.params.wsId || 'Default Space')
 
-const { loading, data: result, execute: getMeInfo } = useApi(getMe, [], { immediate: true });
+const {loading: updating, execute: runGetme} = useAction(getMe, {
+  silent: false,
+  successMsg: "获取登陆信息成功",
+  errorMsg: '获取登陆信息失败',
+  onSuccess: (data) => {
+    user.name = data.user
+  }
+});
 
 const handleLogout = () => {
   localStorage.removeItem('wf_user')
@@ -32,23 +40,11 @@ const handleLogout = () => {
   router.push('/login')
 }
 
-const getMeData = async () => {
-  loading.value = true
-  try {
-    const { success, data } = await getMeInfo(params.value)
-    if (success) {
-      user.value = data
-    }
-  } catch (err) {
-    toast("获取用户信息失败", "error")
-  } finally {
-    setTimeout(() => { loading.value = false }, 500)
-  }
-}
+
 
 onMounted(() => {
   params.value.token = localStorage.getItem("wf_token")
-  getMeData()
+  runGetme(params.value)
 })
 </script>
 

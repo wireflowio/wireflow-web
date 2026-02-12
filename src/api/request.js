@@ -13,13 +13,21 @@ service.interceptors.request.use(config => {
     if (token) {
         config.headers['Authorization'] = `Bearer ${token}`
     }
+
+    const workspaceId = router.currentRoute.value.params.workspaceId
+
+    if (workspaceId) {
+        config.headers['X-Workspace-Id'] = workspaceId
+    }
     return config
+}, (error) => {
+    return Promise.reject(error)
 })
 
 // 2. 请求拦截器：每条请求都会带上 Token
 service.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('access_token');
+        const token = localStorage.getItem('wf_token');
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }

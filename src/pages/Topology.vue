@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from 'vue'
 import TopologyGraph from '../components/topology/TopologyGraph.vue'
 import NodeDetailsDrawer from '../components/topology/NodeDetailsDrawer.vue'

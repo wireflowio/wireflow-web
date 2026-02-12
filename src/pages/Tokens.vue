@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref ,inject} from 'vue';
 import { listTokens } from '@/api/wireflow';
 import { useConfirm } from '@/composables/useConfirm' // 引入插件
