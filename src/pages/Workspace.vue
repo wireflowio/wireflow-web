@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import {ref} from 'vue'
+import {onMounted, watch, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import Icon from '../components/icons/Icon.vue'
 import {add, Workspace, listWs} from "@/api/workspace";
 import {useAction,useTable} from '@/composables/useApi'
+import {useWorkspaceStore} from '@/stores/workspace'
 import SideDrawer from "../components/SideDrawer.vue";
 import Pagination  from "../components/Pagination.vue";
 
@@ -16,35 +17,50 @@ const router = useRouter()
 //   { id: 'ws-103', name: '广州分拣中心', namespace: 'wf-guangzhou-v3', nodeCount: 45, tokenCount: 5, maxNodes: 50, status: 'warning', createdAt: '2024-05-20' }
 // ])
 
-const form = ref({})
+const workspaceStore = useWorkspaceStore()
 
+const enterWorkspace = (ws: any) => {
+  // 1. 调用 Pinia 更新全局状态并持久化
+  workspaceStore.switchWorkspace(ws)
+
+  // 2. 执行跳转（建议跳转到该空间的概览或节点页）
+  // 路径建议携带 ID，这样用户刷新页面时路由依然有效
+  router.push(`/ws/${ws.id}/nodes`)
+}
+
+const initialForm = {
+  displayName: '',
+  slug: '',
+  maxNodeCount: 20
+}
+const form = ref({ ...initialForm })
+
+// 2. 列表数据流
+const { rows, total, loading, params, refresh } = useTable(listWs, {
+  successMsg: '数据已同步',
+  errorMsg: '无法获取空间列表',
+})
+
+// 3. 监听分页参数变化：当页码切换时自动刷新
+watch(() => [params.page, params.pageSize], () => {
+  refresh()
+}, { deep: true })
 
 const isDrawerOpen = ref(false)
 const drawerType = ref('view') // 'view', 'edit', 'create'
 
-const openDrawer = (type, policy) => {
-  drawerType.value = type
-  isDrawerOpen.value = true
-}
-
-// 1. 列表自动管理（含自动报错 Toast）
-const {rows, total, loading, params, refresh} = useTable(listWs, {
-  successMsg: '刷新列表成功',
-  errorMsg: '刷新列表失败',
+const { loading: isSubmitting, execute: runAdd } = useAction(add, {
+  successMsg: "空间创建成功",
+  onSuccess: () => {
+    isDrawerOpen.value = false
+    form.value = { ...initialForm } // 重置表单
+    refresh() // 刷新列表
+  }
 })
 
-const {loading: updating, execute: runAdd} = useAction(add, {
-  silent: false,
-  successMsg: "创建空间成功",
-  errorMsg: '创建空间失败',
-  onSuccess: (data) => {
-    rows.value = data.valu
-  }
-});
-
-// 2. 交互逻辑
-const enterWorkspace = (wsId) => {
-  router.push(`/ws/${wsId}/nodes`)
+const openDrawer = (type: 'view' | 'edit' | 'create') => {
+  drawerType.value = type
+  isDrawerOpen.value = true
 }
 
 const handleDelete = (ws) => {
@@ -53,42 +69,43 @@ const handleDelete = (ws) => {
   }
 }
 
-// 3. 新建空间侧边栏逻辑
-const isSubmitting = ref(false)
-const newWS = ref({
-  name: '',
-  namespace: '',
-  region: 'cn-shanghai',
-  maxNodes: 20
-})
 
 const handleCreate = async () => {
+  if (!form.value.displayName) return
   await runAdd(form.value)
 }
+
+// 6. 路由跳转
+// const enterWorkspace = (wsId: string) => {
+//   router.push(`/ws/${wsId}/nodes`)
+// }
+
 </script>
 
 <template>
   <div class="min-h-screen bg-[#f8fafc]">
-    <div class="max-w-[1400px] mx-auto p-4 lg:p-6 space-y-4 relative">
+    <div class="max-w-[1400px] mx-auto p-4 lg:p-6 space-y-6">
 
-      <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+      <header class="flex items-center justify-between pb-4 border-b border-slate-200">
         <div class="flex items-center gap-3">
           <div class="p-2 bg-primary rounded-xl text-white shadow-sm">
             <Icon name="workspace" class="w-5 h-5"/>
           </div>
           <div>
             <h1 class="text-xl font-bold text-slate-900 tracking-tight">工作空间</h1>
-            <p class="text-xs text-slate-400 font-medium">共 {{ rows.length }} 个可用隔离区</p>
+            <p class="text-xs text-slate-400 font-medium">共 {{ total || 0 }} 个可用隔离区</p>
           </div>
         </div>
-        <button
-            @click="openDrawer('create')"
-            class="btn btn-primary btn-sm rounded-lg px-4 h-9 shadow-sm"
-        >
+        <button @click="openDrawer('create')" class="btn btn-primary btn-sm rounded-lg px-4 h-9">
           <Icon name="plus" class="w-3.5 h-3.5 mr-1"/>
           新建空间
         </button>
-      </div>
+      </header>
+
+      <main>
+        <div v-if="loading && rows.length === 0" class="grid grid-cols-1 md:grid-cols-4 gap-4 opacity-50">
+          <div v-for="i in 4" :key="i" class="h-48 bg-slate-100 rounded-2xl animate-pulse"></div>
+        </div>
 
       <div v-if="rows.length > 0" class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
         <div
@@ -146,29 +163,41 @@ const handleCreate = async () => {
                 <li><a @click="handleDelete(ws)" class="text-error py-1">销毁空间</a></li>
               </ul>
             </div>
-            <button @click="enterWorkspace(ws.id)" class="btn btn-primary btn-xs rounded-md px-3 font-bold shadow-none">
+            <button @click="enterWorkspace(ws)" class="btn btn-primary btn-xs rounded-md px-3 font-bold shadow-none">
               进入管理
               <Icon name="arrow-right" class="w-2.5 h-2.5 ml-1"/>
             </button>
           </div>
         </div>
 
-        <!-- 分页部分 -->
+      </div>
+
+        <div v-else class="py-24 text-center">
+          <div class="inline-flex p-6 bg-slate-50 rounded-full mb-4">
+            <Icon name="workspace" class="w-12 h-12 text-slate-200"/>
+          </div>
+          <p class="text-sm font-bold text-slate-400">未找到匹配的空间，请尝试新建</p>
+        </div>
+      </main>
+
+<!--      <footer class="flex justify-between items-center pt-6 border-t border-slate-100">-->
+<!--        <div class="text-[11px] text-slate-400 font-medium">-->
+<!--          显示 {{ rows.length }} 条，共 {{ total }} 条数据-->
+<!--        </div>-->
+
+
+      <footer class="flex justify-between items-center pt-6 border-t border-slate-100">
+        <div class="text-[11px] text-slate-400 font-medium">
+          显示 {{ rows.length }} 条，共 {{ total }} 条数据
+        </div>
         <Pagination
             v-model:page="params.page"
             v-model:pageSize="params.pageSize"
             :total="total"
             item-name="空间"
         />
+      </footer>
 
-        <div v-if="rows.length === 0" class="p-20 text-center opacity-30 flex flex-col items-center">
-          <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-          </svg>
-          <p class="text-sm font-bold">未找到匹配的空间</p>
-        </div>
-      </div>
 
       <SideDrawer
           v-model="isDrawerOpen"
@@ -181,21 +210,21 @@ const handleCreate = async () => {
           <div class="flex-1 overflow-y-auto p-6 space-y-6">
             <div class="space-y-1.5">
               <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">空间显示名称</label>
-              <input v-model="form.name" type="text" placeholder="例如：上海核心机房"
+              <input v-model="form.displayName" type="text" placeholder="例如：上海核心机房"
                      class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all"/>
             </div>
 
             <div class="space-y-1.5">
               <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">命名空间 (K8s
                 Namespace)</label>
-              <input v-model="form.namespace" type="text" placeholder="wf-prod-sh"
+              <input v-model="form.slug" type="text" placeholder="wf-prod-sh"
                      class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono outline-none focus:ring-2 focus:ring-primary/20 transition-all"/>
             </div>
 
             <div class="space-y-1.5">
               <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">资源配额 (Max
                 Nodes)</label>
-              <select v-model="form.maxNodes"
+              <select v-model="form.maxNodeCount"
                       class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none">
                 <option :value="20">20 Nodes (Standard)</option>
                 <option :value="50">50 Nodes (Advanced)</option>
@@ -216,7 +245,7 @@ const handleCreate = async () => {
           <div class="p-6 border-t border-slate-100 bg-slate-50/50">
             <button
                 @click="handleCreate"
-                :disabled="!form.name || isSubmitting"
+                :disabled="!form.displayName || isSubmitting"
                 class="btn btn-primary w-full h-12 rounded-xl font-black uppercase tracking-[0.1em] shadow-lg shadow-primary/20 transition-all active:scale-[0.98]">
               <span v-if="!isSubmitting">提交并初始化空间</span>
               <span v-else class="loading loading-spinner loading-sm"></span>

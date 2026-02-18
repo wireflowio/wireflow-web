@@ -7,7 +7,7 @@ export const createNetwork = (name) => request.post('/networks', { name });
 // --- Token 管理 ---
 // 获取指定网络的入网 Token 及其安装指令
 export const listTokens = (data) =>
-    request.get(`/tokens`, data);
+    request.get(`/token/list`, data);
 
 // --- 节点管理 (Peers) ---
 export const getPeers = (networkId) =>

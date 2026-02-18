@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import {useWorkspaceStore} from "../stores/workspace";
 import LandingLayout from '../layouts/LandingLayout.vue'
 import MainLayout from '../layouts/MainLayout.vue'
 import BlankLayout from '../layouts/BlankLayout.vue'
@@ -71,7 +72,38 @@ const routes = [
     },
 ]
 
-export default createRouter({
+const router =  createRouter({
     history: createWebHistory(),
     routes,
 })
+
+router.beforeEach((to, from, next) => {
+    // 设置页面标题
+    if (to.meta.title) {
+        document.title = `${to.meta.title} - WireFlow`
+    }
+
+    const workspaceStore = useWorkspaceStore()
+    const wsIdFromPath = to.params.wsId as string
+
+    // 逻辑优化：如果路径里有 wsId，确保 Store 和 LocalStorage 同步
+    if (wsIdFromPath) {
+        // 如果当前 Store 里的 ID 和 URL 里的不一致
+        if (workspaceStore.activeId !== wsIdFromPath) {
+            console.log('检测到 URL 空间切换:', wsIdFromPath)
+
+            // 1. 同步 LocalStorage
+            localStorage.setItem('active_ws_id', wsIdFromPath)
+
+            // 2. 这里可以触发一个“回填”动作。
+            // 因为你只有 ID 没有 Name，你可以先存一个占位对象，或者在这里请求 API 补全信息
+            if (!workspaceStore.currentWorkspace) {
+                workspaceStore.currentWorkspace = { id: wsIdFromPath, displayName: '加载中...' }
+            }
+        }
+    }
+
+    next()
+})
+
+export default router

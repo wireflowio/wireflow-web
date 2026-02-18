@@ -19,7 +19,7 @@ service.interceptors.request.use(config => {
     // 2. 安全地获取 workspaceId
     // 使用可选链 ?. 防止在路由未就绪时报错
     const params = router.currentRoute?.value?.params
-    const workspaceId = params?.workspaceId
+    const workspaceId = params?.wsId
 
     // 3. 只有当 workspaceId 存在，且不是占位符时才注入
     if (workspaceId && workspaceId !== 'all') {

@@ -13,6 +13,7 @@ const {loading: updating, execute: runLogin} = useAction(login, {
   errorMsg: '用户登陆失败',
   onSuccess: (data) => {
     localStorage.setItem("wf_user", data.user | data.email)
+    localStorage.setItem("role", data.role)
     localStorage.setItem("wf_token", data.token)
     router.push("/dashboard")
   }
@@ -21,7 +22,7 @@ const {loading: updating, execute: runLogin} = useAction(login, {
 
 // 表单数据
 const form = ref<User>( {
-  email: '',
+  username: '',
   password: '',
   remember: false
 })
@@ -104,7 +105,7 @@ const handleSocialLogin = (provider: string) => {
                   <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
               </div>
-              <input v-model="form.email" type="text" placeholder="name@company.com" required
+              <input v-model="form.username" type="text" placeholder="name@company.com" required
                      class="w-full h-14 pl-12 pr-6 bg-slate-100/50 dark:bg-white/5 border-none rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 transition-all dark:text-white"/>
             </div>
           </div>
