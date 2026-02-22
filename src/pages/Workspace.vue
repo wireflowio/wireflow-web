@@ -10,13 +10,6 @@ import Pagination  from "../components/Pagination.vue";
 
 const router = useRouter()
 
-// 1. 模拟数据
-// const rows = ref<Workspace>([
-//   { id: 'ws-101', name: '上海智能工厂', namespace: 'wf-shanghai-prod', nodeCount: 12, tokenCount: 2, maxNodes: 20, status: 'healthy', createdAt: '2024-02-01' },
-//   { id: 'ws-102', name: '北京研发边缘组', namespace: 'wf-beijing-test', nodeCount: 5, tokenCount: 8, maxNodes: 50, status: 'healthy', createdAt: '2024-03-15' },
-//   { id: 'ws-103', name: '广州分拣中心', namespace: 'wf-guangzhou-v3', nodeCount: 45, tokenCount: 5, maxNodes: 50, status: 'warning', createdAt: '2024-05-20' }
-// ])
-
 const workspaceStore = useWorkspaceStore()
 
 const enterWorkspace = (ws: any) => {

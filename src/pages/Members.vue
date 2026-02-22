@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue'
-import {useAction} from '@/composables/useApi'
+import {ref, watch, onUnmounted, computed} from 'vue'
 import {add} from '@/api/user'
 import SideDrawer from '@/components/SideDrawer.vue'
 import Pagination from '@/components/Pagination.vue'
+
+import { listWs} from "@/api/workspace";
+import {useAction,useTable} from '@/composables/useApi'
+import {useWorkspaceStore} from '@/stores/workspace'
 
 import {Member} from '@/api/user'
 
@@ -12,10 +15,10 @@ const {loading:addLoading, execute: runAdd} = useAction(add, {
   errorMsg: "添加用户失败",
 })
 
-const params = ref({
-  page: '',
-  pageSize: '',
-  total: '',
+// 2. 列表空间数据流
+const { rows, total, loading, params, refresh } = useTable(listWs, {
+  successMsg: '数据已同步',
+  errorMsg: '无法获取空间列表',
 })
 
 // --- 状态控制 ---
@@ -24,8 +27,6 @@ const drawerType = ref<'invite' | 'config'>('invite') // 区分是添加成员�
 const selectedMember = ref<Member | null>(null)
 const isAddingNs = ref(false)
 const newNsSelection = ref('')
-
-
 
 const members = ref<Member[]>([
   {
@@ -41,7 +42,17 @@ const members = ref<Member[]>([
   }
 ])
 
-const tenantNamespaces = ['tenant-a-ns', 'tenant-b-ns', 'global-platform-ns', 'monitoring-ns', 'logging-ns']
+//还再带一个wsID
+const tenantNamespaces = computed(() => {
+  if (!rows.value) return []
+
+  return rows.value.map(ws => ({
+    id: ws.id,             // 提交时使用的唯一标识
+    name: ws.displayName,  // 页面显示的名称
+    slug: ws.slug          // (可选) 命名空间，有时提交也需要用到
+  }))
+})
+
 const roleTemplates = [
   { name: 'Admin', desc: '完全控制权', color: 'text-blue-600 bg-blue-50 border-blue-100' },
   { name: 'editor', desc: '可管理资源', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
@@ -200,9 +211,9 @@ const getRoleStyle = (roleName: string) => roleTemplates.find(t => t.name === ro
                 </select>
               </div>
               <div class="group">
-                <label class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 block">主 Namespace</label>
+                <label class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 block">主空间</label>
                 <select v-model="form.namespace" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
-                  <option v-for="ns in tenantNamespaces" :key="ns">{{ ns }}</option>
+                  <option v-for="r in rows" :key="r.id" :value="r.namespace">{{ r.displayName }}</option>
                 </select>
               </div>
             </div>
@@ -228,7 +239,7 @@ const getRoleStyle = (roleName: string) => roleTemplates.find(t => t.name === ro
               <label class="text-[10px] font-bold text-blue-600 uppercase">选择目标空间</label>
               <select v-model="newNsSelection" class="w-full bg-white dark:bg-slate-900 border-none rounded-xl text-sm p-2.5 shadow-sm outline-none">
                 <option value="">请选择...</option>
-                <option v-for="ns in tenantNamespaces" :key="ns">{{ ns }}</option>
+                <option v-for="ns in tenantNamespaces" :key="ns.id">{{ ns }}</option>
               </select>
               <div class="flex gap-2">
                 <button @click="addNsBinding" class="flex-1 bg-blue-600 text-white text-xs font-bold py-2 rounded-xl shadow-md">确认添加</button>

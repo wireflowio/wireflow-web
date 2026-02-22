@@ -1,25 +1,34 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Icon from './icons/Icon.vue'
+import {add, Workspace, listWs} from "@/api/workspace";
+import {useAction,useTable} from '@/composables/useApi'
+import {useWorkspaceStore} from '@/stores/workspace'
 
 const route = useRoute()
 const router = useRouter()
 
+// 2. 列表数据流
+const { rows, total, loading, params, refresh } = useTable(listWs, {
+  successMsg: '数据已同步',
+  errorMsg: '无法获取空间列表',
+})
+
 // 1. 模拟当前选中的 Workspace 数据 (实际应从 Pinia/Vuex 获取)
 // 这里的逻辑：如果当前路由包含 /ws/，则认为在某个空间内
 const currentWsId = computed(() => route.params.wsId)
+// 2. 从当前列表中检索活动的 Workspace 对象
 const activeWs = computed(() => {
-  if (!currentWsId.value) return null
-  // 模拟从列表找当前空间名
-  return { id: currentWsId.value, name: '智能工厂 A 区' }
+  if (!currentWsId.value || rows.value.length === 0) return null
+
+  // 在 rows 中查找匹配项
+  const found = rows.value.find(ws => ws.id === currentWsId.value)
+
+  // 如果找到了，返回该对象；没找到（比如直接刷新的瞬间数据还没回来），返回一个带 ID 的占位符
+  return found || { id: currentWsId.value, displayName: '加载中...' }
 })
 
-// 2. 模拟空间列表 (切换器使用)
-const workspaces = ref([
-  { id: 'ws-101', name: '智能工厂 A 区' },
-  { id: 'ws-102', name: '边缘网关测试' },
-])
 
 // 3. 菜单定义
 const menuGroups = computed(() => {
@@ -64,24 +73,31 @@ const switchWorkspace = (id) => {
   <aside class="lg:sticky lg:top-[88px] max-h-[calc(100vh-120px)] flex flex-col gap-4 overflow-y-auto custom-sidebar pb-4">
 
     <div class="dropdown w-full">
-      <div tabindex="0" role="button" class="flex items-center gap-3 p-3 bg-white/60 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-md transition-all group active:scale-95">
-        <div class="w-10 h-10 rounded-2xl bg-primary text-primary-content flex items-center justify-center font-bold shadow-lg shadow-primary/20">
-          {{ activeWs ? activeWs.name[0] : 'W' }}
+      <div
+          tabindex="0"
+          role="button"
+          class="flex items-center gap-3 p-3 bg-white/60 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-md transition-all group active:scale-95 w-full max-w-[240px]"
+          :title="activeWs?.displayName"
+      >
+        <div class="w-10 h-10 shrink-0 rounded-2xl bg-primary text-primary-content flex items-center justify-center font-bold shadow-lg shadow-primary/20">
+          {{ activeWs?.displayName ? activeWs.displayName[0].toUpperCase() : 'W' }}
         </div>
+
         <div class="flex-1 min-w-0 text-left">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Workspace</div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-tight">Workspace</div>
           <div class="text-sm font-bold truncate text-slate-700">
-            {{ activeWs ? activeWs.name : '选择工作空间' }}
+            {{ activeWs?.displayName || '选择工作空间' }}
           </div>
         </div>
-        <Icon name="chevron-down" class="w-4 h-4 opacity-30 group-hover:opacity-100 transition-all" />
+
+        <Icon name="chevron-down" class="w-4 h-4 shrink-0 opacity-30 group-hover:opacity-100 transition-all" />
       </div>
 
       <ul tabindex="0" class="dropdown-content z-[50] menu p-2 shadow-2xl bg-base-100 rounded-2xl w-full mt-2 border border-base-300">
-        <li v-for="ws in workspaces" :key="ws.id">
+        <li v-for="ws in rows" :key="ws.id">
           <a @click="switchWorkspace(ws.id)" :class="{ 'active': currentWsId === ws.id }" class="flex items-center gap-3 p-3 rounded-xl">
-            <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-xs">{{ ws.name[0] }}</div>
-            <span class="text-sm font-medium">{{ ws.name }}</span>
+            <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-xs">{{ ws.displayName[0] }}</div>
+            <span class="text-sm font-medium">{{ ws.displayName }}</span>
           </a>
         </li>
         <div class="divider my-1 opacity-50"></div>
