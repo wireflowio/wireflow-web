@@ -1,13 +1,24 @@
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue'
+import {ref, watch, onUnmounted, computed} from 'vue'
+import {add} from '@/api/user'
 import SideDrawer from '@/components/SideDrawer.vue'
 import Pagination from '@/components/Pagination.vue'
 
-const loading = ref(false)
-const params = ref({
-  page: '',
-  pageSize: '',
-  total: '',
+import { listWs} from "@/api/workspace";
+import {useAction,useTable} from '@/composables/useApi'
+import {useWorkspaceStore} from '@/stores/workspace'
+
+import {Member} from '@/api/user'
+
+const {loading:addLoading, execute: runAdd} = useAction(add, {
+  successMsg: "添加用户成功",
+  errorMsg: "添加用户失败",
+})
+
+// 2. 列表空间数据流
+const { rows, total, loading, params, refresh } = useTable(listWs, {
+  successMsg: '数据已同步',
+  errorMsg: '无法获取空间列表',
 })
 
 // --- 状态控制 ---
@@ -16,15 +27,6 @@ const drawerType = ref<'invite' | 'config'>('invite') // 区分是添加成员�
 const selectedMember = ref<Member | null>(null)
 const isAddingNs = ref(false)
 const newNsSelection = ref('')
-
-// --- 数据定义 ---
-interface Binding { ns: string; role: string; quota: string; }
-interface Member {
-  id: number; name: string; email: string; avatar: string;
-  provider: 'local' | 'dex'; role: string; sa: string;
-  status: 'active' | 'pending'; lastActive: string; tenantId: string;
-  vip?: string; bindings: Binding[];
-}
 
 const members = ref<Member[]>([
   {
@@ -40,15 +42,25 @@ const members = ref<Member[]>([
   }
 ])
 
-const tenantNamespaces = ['tenant-a-ns', 'tenant-b-ns', 'global-platform-ns', 'monitoring-ns', 'logging-ns']
+//还再带一个wsID
+const tenantNamespaces = computed(() => {
+  if (!rows.value) return []
+
+  return rows.value.map(ws => ({
+    id: ws.id,             // 提交时使用的唯一标识
+    name: ws.displayName,  // 页面显示的名称
+    slug: ws.slug          // (可选) 命名空间，有时提交也需要用到
+  }))
+})
+
 const roleTemplates = [
   { name: 'Admin', desc: '完全控制权', color: 'text-blue-600 bg-blue-50 border-blue-100' },
-  { name: 'Operator', desc: '可管理资源', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
-  { name: 'Auditor', desc: '只读权限', color: 'text-slate-600 bg-slate-50 border-slate-100' }
+  { name: 'editor', desc: '可管理资源', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
+  { name: 'viewer', desc: '只读权限', color: 'text-slate-600 bg-slate-50 border-slate-100' }
 ]
 
-const inviteForm = ref({
-  email: '', password: '', role: 'Operator', tenant: 'tenant-a-ns', provider: 'local' as 'local' | 'dex'
+const form = ref({
+  email: '', username: '', password: '', role: 'editor', tenant: 'tenant-a-ns', provider: 'local' as 'local' | 'dex'
 })
 
 // --- 逻辑处理 ---
@@ -81,14 +93,8 @@ const addNsBinding = () => {
   newNsSelection.value = ''; isAddingNs.value = false
 }
 
-const saveChanges = () => {
-  if (drawerType.value === 'config' && selectedMember.value) {
-    const idx = members.value.findIndex(m => m.id === selectedMember.value!.id)
-    if (idx !== -1) members.value[idx] = { ...selectedMember.value }
-  } else if (drawerType.value === 'invite') {
-    // 处理邀请逻辑...
-  }
-  isDrawerOpen.value = false
+const handleSave = async () => {
+ await runAdd(form.value)
 }
 
 const getRoleStyle = (roleName: string) => roleTemplates.find(t => t.name === roleName)?.color || ''
@@ -175,39 +181,39 @@ const getRoleStyle = (roleName: string) => roleTemplates.find(t => t.name === ro
           <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-white/5">
             <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 block">账户类型</label>
             <div class="flex p-1 bg-slate-200/50 dark:bg-slate-900/50 rounded-xl">
-              <button @click="inviteForm.provider = 'local'"
-                      :class="inviteForm.provider === 'local' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-500'"
+              <button @click="form.provider = 'local'"
+                      :class="form.provider === 'local' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-500'"
                       class="flex-1 py-2 rounded-lg text-xs font-bold transition-all">本地账号</button>
-              <button @click="inviteForm.provider = 'dex'"
-                      :class="inviteForm.provider === 'dex' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-500'"
+              <button @click="form.provider = 'dex'"
+                      :class="form.provider === 'dex' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-500'"
                       class="flex-1 py-2 rounded-lg text-xs font-bold transition-all">SSO / Dex</button>
             </div>
           </div>
 
           <div class="space-y-4 px-1">
             <div class="group">
-              <label class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 block group-focus-within:text-blue-600">电子邮箱</label>
-              <input v-model="inviteForm.email" type="email" placeholder="name@example.com"
+              <label class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 block group-focus-within:text-blue-600">用户名</label>
+              <input v-model="form.username" type="email" placeholder="name@example.com"
                      class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
             </div>
 
-            <div v-if="inviteForm.provider === 'local'" class="group">
+            <div v-if="form.provider === 'local'" class="group">
               <label class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 block">初始密码</label>
-              <input v-model="inviteForm.password" type="password" placeholder="••••••••"
+              <input v-model="form.password" type="password" placeholder="••••••••"
                      class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20" />
             </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div class="group">
                 <label class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 block">业务角色</label>
-                <select v-model="inviteForm.role" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
+                <select v-model="form.role" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
                   <option v-for="r in roleTemplates" :key="r.name">{{ r.name }}</option>
                 </select>
               </div>
               <div class="group">
-                <label class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 block">主 Namespace</label>
-                <select v-model="inviteForm.tenant" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
-                  <option v-for="ns in tenantNamespaces" :key="ns">{{ ns }}</option>
+                <label class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 block">主空间</label>
+                <select v-model="form.namespace" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
+                  <option v-for="r in rows" :key="r.id" :value="r.namespace">{{ r.displayName }}</option>
                 </select>
               </div>
             </div>
@@ -233,7 +239,7 @@ const getRoleStyle = (roleName: string) => roleTemplates.find(t => t.name === ro
               <label class="text-[10px] font-bold text-blue-600 uppercase">选择目标空间</label>
               <select v-model="newNsSelection" class="w-full bg-white dark:bg-slate-900 border-none rounded-xl text-sm p-2.5 shadow-sm outline-none">
                 <option value="">请选择...</option>
-                <option v-for="ns in tenantNamespaces" :key="ns">{{ ns }}</option>
+                <option v-for="ns in tenantNamespaces" :key="ns.id">{{ ns }}</option>
               </select>
               <div class="flex gap-2">
                 <button @click="addNsBinding" class="flex-1 bg-blue-600 text-white text-xs font-bold py-2 rounded-xl shadow-md">确认添加</button>
@@ -284,9 +290,9 @@ const getRoleStyle = (roleName: string) => roleTemplates.find(t => t.name === ro
                   class="flex-1 px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors">
             取消
           </button>
-          <button @click="saveChanges"
+          <button @click="handleSave"
                   class="flex-[2] px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/25 active:scale-[0.98] transition-all">
-            {{ drawerType === 'invite' ? '发送邀请' : '同步 K8s 权限' }}
+            {{ drawerType === 'invite' ? '保存' : '同步 K8s 权限' }}
           </button>
         </div>
       </template>

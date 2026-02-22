@@ -36,6 +36,11 @@ export function useApi(apiFunc) {
     }
 }
 
+export interface PageParams {
+    page: number,
+    pageSize: number,
+}
+
 
 // src/composables/useTable.ts
 //分页使用
@@ -55,7 +60,7 @@ export function useTable(apiFunc, options = {}) {
     const total = ref(0)
 
     // 初始化参数
-    const params = ref({
+    const params: PageParams = ref({
         page: 1,
         pageSize: 4,
         search: '',
@@ -107,12 +112,20 @@ export function useAction(apiFunc, options = {}) {
         try {
             const {code, data, msg} = await apiFunc(params)
             if (code === 200) {
-                toast(options.successMsg || '操作成功', 'success')
-                options.onSuccess?.() // 成功后的回调，比如关闭抽屉、刷新列表
-                return true
+                // 核心控制逻辑：
+                // 1. 如果设置了 silent: true，绝对不弹。
+                // 2. 否则，只有在提供了 successMsg 的情况下才弹。
+                if (!options.silent && options.successMsg) {
+                    toast(options.successMsg, 'success')
+                }
+
+                options.onSuccess?.(data)
+                return data
             } else {
-                toast(options.errorMsg || '操作失败', 'error')
-                return false
+                // 错误提示通常不建议 silent，除非特殊业务
+                if (!options.silentError) {
+                    toast(msg || options.errorMsg || '请求失败', 'error')
+                }
             }
         } catch (err) {
             toast('系统繁忙，请稍后再试', 'error')

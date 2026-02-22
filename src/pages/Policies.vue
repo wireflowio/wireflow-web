@@ -1,11 +1,11 @@
-<script setup>
+<script setup lang="ts">
 import {computed, inject, onMounted, ref, watch} from 'vue'
 import {useRoute} from 'vue-router'
 import SideDrawer from '@/components/SideDrawer.vue'
 import Pagination from '@/components/Pagination.vue'
 // 假设你已经创建了这些组件
 import {useConfirm} from '@/composables/useConfirm'
-import {createPolicy, listPolicy} from '@/api/user';
+import {createPolicy,deletePolicy,  listPolicy} from '@/api/policy';
 import {useTable, useApi} from "@/composables/useApi.js";
 
 // 注入全局 Toast 函数
@@ -127,7 +127,7 @@ const handleDelete = async (policy) => {
     loading.value = true
     try {
       // 调用你的删除 API
-      await deletePolicy(form.value)
+      await deletePolicy(policy.name)
       toast("Policy deleted successfully")
       await refresh() // 刷新列表
     } finally {

@@ -1,10 +1,11 @@
-<script setup>
-import { onMounted, ref ,inject} from 'vue';
-import { listTokens } from '@/api/wireflow';
-import { useConfirm } from '@/composables/useConfirm' // 引入插件
+<script setup lang="ts">
+import {inject, ref} from 'vue';
+import {create, rmToken, listTokens} from '@/api/token';
+import {useConfirm} from '@/composables/useConfirm' // 引入插件
 import Pagination from '@/components/Pagination.vue'
-import {useTable, useApi} from '@/composables/useApi'
-const { confirm } = useConfirm()
+import {useAction, useTable} from '@/composables/useApi'
+
+const {confirm} = useConfirm()
 const showModal = ref(false);
 // 注入全局 Toast 函数
 const toast = inject('globalToast')
@@ -17,6 +18,34 @@ const {rows, total, loading, params, refresh} = useTable(listTokens, {
   errorMsg: '刷新列表失败',
   initialParams: {namespace: 'wf-test'}
 })
+
+const {loading: addLoading, execute: runCreate} = useAction(create, {
+  successMsg: "生成Token成功",
+  errorMsg: "生成Token失败",
+})
+
+const form = ref({
+  name: '',
+})
+
+const {loading: deleteLoading, execute: runDelete} = useAction(rmToken, {
+  successMsg: "删除Token成功",
+  errorMsg: "删除Token失败",
+})
+
+const handleCreateToken = async () => {
+  // 像写同步代码一样调用弹窗
+  const isConfirmed = await confirm({
+    title: '确认生成Token？',
+    message: `你正在尝试创建一个Token，请确认此操作`,
+    confirmText: '立即生成',
+    type: 'danger'
+  })
+  if (isConfirmed) {
+    await runCreate()
+    refresh()
+  }
+}
 
 const handleCopyCommand = async (token) => {
   // 这里可以根据选中的 token 动态生成命令
@@ -45,9 +74,9 @@ const handleDelete = async (token) => {
     loading.value = true
     try {
       // 调用你的删除 API
-      // await deletePeer(node.appId)
-      toast("Node deleted successfully")
-      await getPeers() // 刷新列表
+      await runDelete(token)
+      toast("Token deleted successfully")
+      await refresh() // 刷新列表
     } finally {
       loading.value = false
     }
@@ -59,12 +88,14 @@ const handleDelete = async (token) => {
 <template>
   <div class="max-w-7xl mx-auto p-4 lg:p-8 space-y-6">
 
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-base-300 pb-6">
+    <div
+        class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-base-300 pb-6">
       <div>
         <h1 class="text-3xl font-extrabold tracking-tight flex items-center gap-3">
           <div class="p-2 bg-warning/10 rounded-xl">
             <svg class="w-8 h-8 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
             </svg>
           </div>
           Token 身份管理
@@ -75,16 +106,23 @@ const handleDelete = async (token) => {
       </div>
       <div class="flex gap-2">
         <button class="btn btn-ghost border-base-300 rounded-xl" @click="refresh">
-          <svg :class="['w-4 h-4', loading ? 'animate-spin' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          <svg :class="['w-4 h-4', loading ? 'animate-spin' : '']" fill="none" stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
         </button>
-        <button class="btn btn-primary btn-md shadow-lg shadow-primary/20 rounded-xl px-8">
-          生成 Token
+        <button class="btn btn-primary btn-md shadow-lg shadow-primary/20 rounded-xl px-8" @click="handleCreateToken">
+          创建 Token
         </button>
       </div>
     </div>
 
     <div class="alert bg-warning/5 border-warning/20 text-warning-content rounded-2xl flex items-start gap-4">
-      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
       <div class="text-xs">
         <h4 class="font-bold">安全建议</h4>
         <p class="opacity-70">Token 仅在生成时完整显示，之后将进行脱敏处理。请勿在非公开场合分享您的安装命令。</p>
@@ -98,9 +136,11 @@ const handleDelete = async (token) => {
       </div>
 
       <div class="divide-y divide-base-300">
-        <div v-if="loading" class="p-20 text-center"><span class="loading loading-spinner loading-lg text-primary"></span></div>
+        <div v-if="loading" class="p-20 text-center"><span
+            class="loading loading-spinner loading-lg text-primary"></span></div>
 
-        <div v-for="r in rows" :key="r.token" class="group flex flex-col md:flex-row items-center justify-between gap-4 p-4 px-6 hover:bg-base-200/50 transition-colors">
+        <div v-for="r in rows" :key="r.token"
+             class="group flex flex-col md:flex-row items-center justify-between gap-4 p-4 px-6 hover:bg-base-200/50 transition-colors">
 
           <div class="flex items-center gap-4 w-full md:w-2/5">
             <div class="avatar placeholder">
@@ -126,11 +166,16 @@ const handleDelete = async (token) => {
 
           <div class="flex items-center gap-2 shrink-0 w-full md:w-auto justify-end">
             <button class="btn btn-primary btn-sm rounded-lg flex gap-2" @click="handleCopyCommand(r.token)">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                   stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
               一键加入
             </button>
             <div class="divider divider-horizontal mx-1"></div>
-            <button class="btn btn-ghost btn-sm text-error/40 hover:text-error hover:bg-error/10" @click="handleDelete(r.token)">删除</button>
+            <button class="btn btn-ghost btn-sm text-error/40 hover:text-error hover:bg-error/10"
+                    @click="handleDelete(r.token)">删除
+            </button>
           </div>
         </div>
 
@@ -153,40 +198,47 @@ const handleDelete = async (token) => {
       </div>
     </div>
 
-    <dialog :class="['modal', showModal ? 'modal-open' : '']">
-      <div class="modal-box w-11/12 max-w-3xl p-0 overflow-hidden rounded-2xl border border-base-300">
-        <div class="p-6 bg-base-200/50 border-b border-base-300">
-          <h3 class="font-bold text-xl flex items-center gap-2">
-            <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            Token 已准备就绪
-          </h3>
-          <p class="text-xs opacity-50 mt-1">请在您的目标 Linux 服务器终端执行以下命令进行节点绑定。</p>
-        </div>
+    <Teleport to="body">
+      <dialog :class="['modal', showModal ? 'modal-open' : '']">
+        <div class="modal-box w-11/12 max-w-3xl p-0 overflow-hidden rounded-2xl border border-base-300">
+          <div class="p-6 bg-base-200/50 border-b border-base-300">
+            <h3 class="font-bold text-xl flex items-center gap-2">
+              <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Token 已准备就绪
+            </h3>
+            <p class="text-xs opacity-50 mt-1">请在您的目标 Linux 服务器终端执行以下命令进行节点绑定。</p>
+          </div>
 
-        <div class="p-8 space-y-4">
-          <div class="relative">
-            <div class="mockup-code bg-[#1e1e1e] text-emerald-400 p-6 shadow-2xl">
-              <pre data-prefix="$"><code>{{ installCommand }}</code></pre>
+          <div class="p-8 space-y-4">
+            <div class="relative">
+              <div class="mockup-code bg-[#1e1e1e] text-emerald-400 p-6 shadow-2xl">
+                <pre data-prefix="$"><code>{{ installCommand }}</code></pre>
+              </div>
+              <button
+                  @click="handleCopyCommand"
+                  :class="['btn btn-sm absolute top-4 right-4', copied ? 'btn-success' : 'btn-primary']"
+              >
+                {{ copied ? '已复制!' : '复制命令' }}
+              </button>
             </div>
-            <button
-                @click="handleCopyCommand"
-                :class="['btn btn-sm absolute top-4 right-4', copied ? 'btn-success' : 'btn-primary']"
-            >
-              {{ copied ? '已复制!' : '复制命令' }}
-            </button>
+
+            <div class="flex items-center gap-2 text-[10px] opacity-40 justify-center">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              支持架构: x86_64, ARM64 | 运行环境: Linux (Systemd)
+            </div>
           </div>
 
-          <div class="flex items-center gap-2 text-[10px] opacity-40 justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            支持架构: x86_64, ARM64 | 运行环境: Linux (Systemd)
+          <div class="modal-action p-4 bg-base-200/50 border-t border-base-300">
+            <button class="btn btn-ghost px-8" @click="showModal = false">完成并关闭</button>
           </div>
         </div>
-
-        <div class="modal-action p-4 bg-base-200/50 border-t border-base-300">
-          <button class="btn btn-ghost px-8" @click="showModal = false">完成并关闭</button>
-        </div>
-      </div>
-    </dialog>
+      </dialog>
+    </Teleport>
 
     <div v-if="copied" class="toast toast-top toast-center z-50">
       <div class="alert alert-success shadow-lg border-none rounded-xl">

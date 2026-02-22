@@ -2,37 +2,33 @@
 import {ref} from 'vue'
 import {useRouter} from 'vue-router'
 
-import {useApi} from '@/composables/useApi'
-import {login} from '@/api/user';
+import {useApi, useAction} from '@/composables/useApi'
+import {login, User} from '@/api/user';
 
 const router = useRouter()
 
-const {loading: isLoading, data,  error, execute: logon} = useApi(login)
+
+const {loading: updating, execute: runLogin} = useAction(login, {
+  successMsg: '用户登陆成功',
+  errorMsg: '用户登陆失败',
+  onSuccess: (data) => {
+    localStorage.setItem("wf_user", data.user | data.email)
+    localStorage.setItem("role", data.role)
+    localStorage.setItem("wf_token", data.token)
+    router.push("/dashboard")
+  }
+});
 
 
 // 表单数据
-const form = ref({
-  email: '',
+const form = ref<User>( {
+  username: '',
   password: '',
   remember: false
 })
 
 const handleLogin = async () => {
-  isLoading.value = true
-  const success = await logon(form.value)
-  if (success) {
-    isLoading.value = true // 再次开启加载状态，模拟“正在跳转...”
-    // 1. 存储 Token (生产环境建议存入 Cookie 或加密的 localStorage)
-    localStorage.setItem('wf_token', data.token)
-
-    // 2. 存储用户信息（可选，用于侧边栏显示头像/邮箱）
-    localStorage.setItem('wf_user', JSON.stringify(data.user || {email: form.value.email}))
-    setTimeout(() => {
-      isLoading.value = false
-      // 3. 执行路由跳转
-      router.push('/dashboard')
-    }, 1200) // 1.2秒后执行
-  }
+    await runLogin(form.value)
 }
 
 const handleSocialLogin = (provider: string) => {
@@ -109,7 +105,7 @@ const handleSocialLogin = (provider: string) => {
                   <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
               </div>
-              <input v-model="form.email" type="text" placeholder="name@company.com" required
+              <input v-model="form.username" type="text" placeholder="name@company.com" required
                      class="w-full h-14 pl-12 pr-6 bg-slate-100/50 dark:bg-white/5 border-none rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 transition-all dark:text-white"/>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import router from '@/router' // 依然引入 router 实例
 
 // 1. 创建实例
 const service = axios.create({
@@ -9,17 +10,31 @@ const service = axios.create({
 
 // 请求拦截器：把 localStorage 里的 token 塞进 Header
 service.interceptors.request.use(config => {
+    // 1. 处理 Token
     const token = localStorage.getItem('wf_token')
     if (token) {
         config.headers['Authorization'] = `Bearer ${token}`
     }
+
+    // 2. 安全地获取 workspaceId
+    // 使用可选链 ?. 防止在路由未就绪时报错
+    const params = router.currentRoute?.value?.params
+    const workspaceId = params?.wsId
+
+    // 3. 只有当 workspaceId 存在，且不是占位符时才注入
+    if (workspaceId && workspaceId !== 'all') {
+        config.headers['X-Workspace-Id'] = workspaceId
+    }
+
     return config
+}, (error) => {
+    return Promise.reject(error)
 })
 
 // 2. 请求拦截器：每条请求都会带上 Token
 service.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('access_token');
+        const token = localStorage.getItem('wf_token');
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
