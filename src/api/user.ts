@@ -25,8 +25,9 @@ export const login = (data:User) => request.post('/users/login', data);
 export const add = (data) => request.post("/users/add", data)
 export const listUser = (data) => request.get("/users/list", data)
 
-export const listPeer = (data) => request.get('/peers/list', data);
+export const deleteUser = (id) => request.delete(`/users/${id}`);
 
+export const listPeer = (data) => request.get('/peers/list', data);
 export const updatePeer = (data) => request.put('/peers/update', data);
 
 

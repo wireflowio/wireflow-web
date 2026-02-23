@@ -128,7 +128,7 @@ export function useAction(apiFunc, options = {}) {
                 }
             }
         } catch (err) {
-            toast('系统繁忙，请稍后再试', 'error')
+            toast('系统繁忙，请稍后再试', err)
             return false
         } finally {
             loading.value = false

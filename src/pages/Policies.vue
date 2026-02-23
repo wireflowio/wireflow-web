@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import {computed, inject, onMounted, ref, watch} from 'vue'
+import {computed, inject, ref, watch} from 'vue'
 import {useRoute} from 'vue-router'
 import SideDrawer from '@/components/SideDrawer.vue'
 import Pagination from '@/components/Pagination.vue'
 // 假设你已经创建了这些组件
 import {useConfirm} from '@/composables/useConfirm'
-import {createPolicy,deletePolicy,  listPolicy} from '@/api/policy';
-import {useTable, useApi} from "@/composables/useApi.js";
+import {createPolicy, deletePolicy, listPolicy} from '@/api/policy';
+import {useApi, useTable} from "@/composables/useApi.js";
+import {getFirstChar, getAvatarColor} from '@/composables/useTheme'
 
 // 注入全局 Toast 函数
 const toast = inject('globalToast')
@@ -74,14 +75,14 @@ const handleCreateOrUpdate = async () => {
 
   // 1. 处理主目标
   const target = parseLabel(payload._targetLabel)
-  payload.peerSelector.matchLabels = { [target.key]: target.value }
+  payload.peerSelector.matchLabels = {[target.key]: target.value}
 
   // 2. 处理规则列表
   const processRules = (rules, direction) => {
     rules.forEach(r => {
       const p = parseLabel(r._rawLabel)
       const peerKey = direction === 'ingress' ? 'from' : 'to'
-      r[peerKey][0].peerSelector.matchLabels = { [p.key]: p.value }
+      r[peerKey][0].peerSelector.matchLabels = {[p.key]: p.value}
 
       // 清理临时字段并强制转换端口
       delete r._rawLabel
@@ -168,12 +169,11 @@ const getEmptyPolicy = () => ({
   namespace: '',
   // 使用辅助字段
   _targetLabel: 'app=web',
-  peerSelector: { matchLabels: {} },
+  peerSelector: {matchLabels: {}},
   policyTypes: ['Ingress'],
   ingress: [],
   egress: []
 })
-
 
 
 const form = ref(getEmptyPolicy())
@@ -229,17 +229,16 @@ const applyTemplate = (key) => {
 // // 4. 动态规则添加
 const addRule = (direction) => {
   const newRule = direction === 'ingress'
-      ? {_rawLabel: 'app=web',from: [{peerSelector: {matchLabels: {role: ''}}}], ports: [{protocol: 'TCP', port: ''}]}
+      ? {_rawLabel: 'app=web', from: [{peerSelector: {matchLabels: {role: ''}}}], ports: [{protocol: 'TCP', port: ''}]}
       : {_rawLabel: 'app=web', to: [{peerSelector: {matchLabels: {role: ''}}}], ports: [{protocol: 'TCP', port: ''}]}
   form.value[direction].push(newRule)
 }
 
 const parseLabel = (str) => {
-  if (!str || !str.includes('=')) return { key: 'app', value: str || '""' };
+  if (!str || !str.includes('=')) return {key: 'app', value: str || '""'};
   const [k, v] = str.split('=');
-  return { key: k.trim(), value: v.trim() };
+  return {key: k.trim(), value: v.trim()};
 }
-
 const yamlPreview = computed(() => {
   const target = parseLabel(form.value._targetLabel);
 
@@ -252,19 +251,42 @@ spec:
     matchLabels:
       ${target.key}: ${target.value}`
 
+  // 处理 Ingress
   if (form.value.policyTypes.includes('Ingress')) {
     yaml += `\n  ingress:`
     form.value.ingress?.forEach(r => {
       const p = parseLabel(r._rawLabel);
       yaml += `\n    - from:\n        - peerSelector:\n            matchLabels:\n              ${p.key}: ${p.value}`
+
+      // 添加端口处理
+      if (r.ports && r.ports.length > 0) {
+        yaml += `\n      ports:`
+        r.ports.forEach(portObj => {
+          if (portObj.port) {
+            yaml += `\n        - protocol: ${portObj.protocol || 'TCP'}\n          port: ${portObj.port}`
+          }
+        })
+      }
     });
   }
 
+  // 处理 Egress
   if (form.value.policyTypes.includes('Egress')) {
     yaml += `\n  egress:`
     form.value.egress?.forEach(r => {
       const p = parseLabel(r._rawLabel);
-      yaml += `\n    - from:\n        - peerSelector:\n            matchLabels:\n              ${p.key}: ${p.value}`
+      // 注意：Egress 对应的是 'to' 字段
+      yaml += `\n    - to:\n        - peerSelector:\n            matchLabels:\n              ${p.key}: ${p.value}`
+
+      // 添加端口处理
+      if (r.ports && r.ports.length > 0) {
+        yaml += `\n      ports:`
+        r.ports.forEach(portObj => {
+          if (portObj.port) {
+            yaml += `\n        - protocol: ${portObj.protocol || 'TCP'}\n          port: ${portObj.port}`
+          }
+        })
+      }
     });
   }
   return yaml
@@ -322,25 +344,10 @@ spec:
           <div class="stat-desc">Whitelist mode</div>
         </div>
       </div>
-<!--      <div class="stats shadow-sm border border-base-300 bg-base-100 hidden lg:flex">-->
-<!--        <div class="stat">-->
-<!--          <div class="stat-title text-xs font-bold uppercase">集群状态</div>-->
-<!--          <div class="stat-value text-2xl font-mono text-info">Normal</div>-->
-<!--          <div class="stat-desc font-mono">Sync with APIServer</div>-->
-<!--        </div>-->
-<!--      </div>-->
     </div>
 
     <div class="bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
       <div class="p-4 bg-base-200/30 border-b border-base-300 flex items-center gap-4">
-<!--        <div class="relative flex-1 max-w-md">-->
-<!--          <svg class="w-4 h-4 absolute left-3 top-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
-<!--            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"-->
-<!--                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>-->
-<!--          </svg>-->
-<!--          <input class="input input-bordered input-sm w-full pl-10 bg-base-100" placeholder="按名称或描述搜索策略..."/>-->
-<!--        </div>-->
-
         <div class="relative flex-1 w-full md:max-w-md">
           <svg class="w-4 h-4 absolute left-3 top-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -368,6 +375,14 @@ spec:
 
           <div class="flex items-center gap-4 w-full md:w-1/3">
             <div :class="[r.mode === 'allow' ? 'bg-success' : 'bg-error', 'w-2 h-2 rounded-full']"></div>
+            <div
+                :class="[
+    'w-6 h-6 flex items-center justify-center rounded-md text-[10px] font-bold text-white shadow-sm transition-transform group-hover:scale-110',
+    getAvatarColor(r.name)
+  ]"
+            >
+              {{ getFirstChar(r.name) }}
+            </div>
             <div>
               <div class="font-bold text-sm group-hover:text-primary transition-colors cursor-pointer"
                    @click="openDrawer('view', r)">{{ r.name }}
@@ -417,7 +432,7 @@ spec:
         v-model="isDrawerOpen"
         :title="drawerType === 'view' ? '策略详情' : (drawerType === 'create' ? '新建安全策略' : '编辑策略')"
         subtitle="Network Security Orchestration"
-        :level="drawerType === 'view' ? 'md' : 'lg'"
+        :level="drawerType === 'view' ? 'md' : 'xl'"
     >
       <template #icon>
         <div class="p-2 bg-primary rounded-lg text-white">
@@ -478,7 +493,7 @@ spec:
                   <div class="flex-1">
                     <div class="text-[10px] opacity-40 font-bold uppercase">允许来自</div>
                     <div class="text-sm font-mono font-bold text-secondary">role:
-                      {{ rule._rawLables|| 'Any' }}
+                      {{ rule._rawLables || 'Any' }}
                     </div>
                   </div>
                   <div class="divider divider-horizontal mx-0 opacity-20"></div>
@@ -544,50 +559,34 @@ spec:
               </div>
             </section>
 
-            <div class="grid grid-cols-3 gap-4" >
-
-
-              <div class="form-control">
-                <span class="text-[9px] uppercase font-bold opacity-40 mb-1">策略名称</span>
-                <input v-model="form.name"
-                       class="input input-sm input-bordered font-mono" placeholder="database"/>
+            <div class="flex flex-wrap md:flex-nowrap gap-4 items-start">
+              <div class="relative flex-1 min-w-[200px]">
+                <span class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">策略名称</span>
+                <input v-model="form.name" class="input input-sm input-bordered w-full font-mono" />
               </div>
 
-              <div class="form-control">
-                <span class="text-[9px] uppercase font-bold opacity-40 mb-1">应用范围</span>
-                <input v-model="form._targetLabel"
-                       class="input input-sm input-bordered font-mono" placeholder="database"/>
+              <div class="relative w-48">
+                <span class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">应用范围</span>
+                <input v-model="form._targetLabel" class="input input-sm input-bordered w-full font-mono" />
               </div>
 
-              <div class="form-control">
-                <span class="text-[9px] uppercase font-bold opacity-40 mb-1">策略类型</span>
-                <div class="flex gap-2">
-                  <select v-model="form.action" class="select select-sm select-bordered font-mono text-xs">
-                    <option value="Allow">Allow</option>
-                    <option value="Deny">Deny</option>
-                  </select>
-
-                </div>
-
+              <div class="relative w-32">
+                <span class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">类型</span>
+                <select v-model="form.action" class="select select-sm select-bordered w-full font-mono">
+                  <option>Allow</option><option>Deny</option>
+                </select>
               </div>
-
             </div>
 
-
             <div class="relative">
-                <span
-                    class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">
-                  策略描述 / 备注
-                </span>
-              <textarea
-                  v-model="form.description"
-                  class="textarea textarea-bordered h-20 leading-tight text-sm shadow-inner"
-                  placeholder="描述此策略的用途，例如：生产环境数据库访问控制..."
-              ></textarea>
+              <span class="absolute -top-2.5 left-3 px-2 bg-base-100 text-[10px] font-black text-primary uppercase tracking-tighter rounded border border-base-300 z-10">描述备注</span>
+              <input v-model="form.description"
+                     class="input input-sm input-bordered w-full italic text-xs"
+                     placeholder="简单描述此策略，例如：控制生产环境 DB 访问..."/>
             </div>
 
             <div class="form-control">
-<!--              <label class="label"><span class="label-text font-bold opacity-70">生效方向 (Policy Types)</span></label>-->
+              <!--              <label class="label"><span class="label-text font-bold opacity-70">生效方向 (Policy Types)</span></label>-->
               <label class="label pb-1">
                 <span class="text-[11px] font-black opacity-50 uppercase tracking-wider">生效方向 / Policy Types</span>
               </label>
@@ -629,7 +628,8 @@ spec:
                   <div class="form-control">
                     <span class="text-[9px] uppercase font-bold opacity-40 mb-1">Protocol & Port</span>
                     <div class="flex gap-2">
-                      <select v-model="rule.ports[0].protocol" class="select select-sm select-bordered font-mono text-xs">
+                      <select v-model="rule.ports[0].protocol"
+                              class="select select-sm select-bordered font-mono text-xs">
                         <option value="TCP">TCP</option>
                         <option value="UDP">UDP</option>
                       </select>
@@ -666,7 +666,7 @@ spec:
                 <div class="card-body p-4 grid grid-cols-2 gap-4">
                   <div class="form-control">
                     <span class="text-[9px] uppercase font-bold opacity-40 mb-1">To Role Label</span>
-                    <input v-model="rule.rawLabel"
+                    <input v-model="rule._rawLabel"
                            class="input input-sm input-bordered font-mono" placeholder="database"/>
                   </div>
                   <div class="form-control">
@@ -674,7 +674,8 @@ spec:
 
                     <span class="text-[9px] uppercase font-bold opacity-40 mb-1">Protocol & Port</span>
                     <div class="flex gap-2">
-                      <select v-model="rule.ports[0].protocol" class="select select-sm select-bordered font-mono text-xs">
+                      <select v-model="rule.ports[0].protocol"
+                              class="select select-sm select-bordered font-mono text-xs">
                         <option value="TCP">TCP</option>
                         <option value="UDP">UDP</option>
                       </select>
@@ -694,7 +695,7 @@ spec:
             </div>
           </div>
 
-          <div class="w-80 bg-neutral flex flex-col border-l border-base-300 hidden lg:flex shadow-2xl">
+          <div class="w-120 bg-neutral flex flex-col border-l border-base-300 hidden lg:flex shadow-2xl">
             <div
                 class="px-4 py-3 bg-black/30 text-[10px] font-bold text-slate-400 tracking-widest flex justify-between items-center border-b border-white/5">
               <span>LIVE YAML PREVIEW</span>
