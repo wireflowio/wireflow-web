@@ -18,13 +18,13 @@ const {loading:addLoading, execute: runAdd} = useAction(add, {
 
 // 2. 列表空间数据流
 const { rows:members, total, loading, params, refresh } = useTable(listUser, {
-  successMsg: '数据已同步',
-  errorMsg: '无法获取空间列表',
+  successMsg: '列表已刷新',
+  errorMsg: '无法刷新列表',
 })
 
 const { rows, total:wsTotal, loading: wsLoading, params:wsParams, wsRefresh } = useTable(listWs, {
-  successMsg: '数据已同步',
-  errorMsg: '无法获取空间列表',
+  successMsg: '列表已刷新',
+  errorMsg: '无法刷新列表',
 })
 
 // --- 状态控制 ---
@@ -100,7 +100,8 @@ const addNsBinding = () => {
 }
 
 const handleSave = async () => {
- await runAdd(form.value)
+  await runAdd(form.value)
+  await refresh()
 }
 
 const getRoleStyle = (roleName: string) => roleTemplates.find(t => t.name === roleName)?.color || ''
@@ -134,7 +135,7 @@ const handleDelete = async (user) => {
   // 像写同步代码一样调用弹窗
   const isConfirmed = await confirm({
     title: '确认删除用户？',
-    message: `你正在尝试删除策略 <span class="text-error font-bold">${user.id}</span>。此操作不可撤销。`,
+    message: `你正在尝试删除用户 <span class="text-error font-bold">${user.name}</span>。此操作不可撤销。`,
     confirmText: '立即删除',
     type: 'danger'
   })
@@ -167,7 +168,16 @@ const handleDelete = async (user) => {
           团队管理
         </h1>
       </div>
-      <button class="btn btn-primary px-8 rounded-xl" @click="openDrawer('invite')">+ 添加成员</button>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost border-base-300 rounded-xl" @click="refresh">
+          <svg :class="['w-4 h-4', loading ? 'animate-spin' : '']" fill="none" stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+        <button class="btn btn-primary px-8 rounded-xl" @click="openDrawer('invite')">+ 添加成员</button>
+      </div>
     </div>
 
     <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
@@ -262,7 +272,7 @@ const handleDelete = async (user) => {
           <Pagination
               v-model:page="params.page"
               v-model:pageSize="params.pageSize"
-              :total="members.length"
+              :total="total"
               item-name="成员"
           />
       </div>
