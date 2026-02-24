@@ -8,6 +8,7 @@ import {getFirstChar, getAvatarColor} from '@/composables/useTheme'
 import {listWs} from '@/api/workspace'
 import {useConfirm} from '@/composables/useConfirm'
 import {deleteUser} from '@/api/user'
+import Icon from "@/components/icons/Icon.vue";
 
 const {confirm} = useConfirm()
 
@@ -156,17 +157,16 @@ const handleDelete = async (user) => {
 
 <template>
   <div class="max-w-7xl mx-auto p-4 lg:p-8 space-y-6">
-    <div
-        class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-base-300 pb-6">
-      <div>
-        <h1 class="text-3xl font-extrabold tracking-tight flex items-center gap-3 text-slate-900">
-          <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </div>
-          团队管理
-        </h1>
+
+    <header class="flex items-center justify-between pb-4 border-b border-slate-200">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-primary rounded-xl text-white shadow-sm">
+          <Icon name="user" class="w-5 h-5"/>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-slate-900 tracking-tight">用户管理</h1>
+          <p class="text-xs text-slate-400 font-medium">Wireflow 用户管理中心</p>
+        </div>
       </div>
       <div class="flex gap-2">
         <button class="btn btn-ghost border-base-300 rounded-xl" @click="refresh">
@@ -176,9 +176,12 @@ const handleDelete = async (user) => {
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
           </svg>
         </button>
-        <button class="btn btn-primary px-8 rounded-xl" @click="openDrawer('invite')">+ 添加成员</button>
+        <button @click="openDrawer('create')" class="btn btn-primary btn-sm rounded-lg px-4 h-9">
+          <Icon name="plus" class="w-3.5 h-3.5 mr-1"/>
+          新建空间
+        </button>
       </div>
-    </div>
+    </header>
 
     <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
       <table class="w-full text-left">

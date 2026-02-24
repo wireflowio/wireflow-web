@@ -1,5 +1,6 @@
 import axios from 'axios';
 import router from '@/router' // 依然引入 router 实例
+import NProgress from '@/composables/progress'
 
 // 1. 创建实例
 const service = axios.create({
@@ -10,6 +11,7 @@ const service = axios.create({
 
 // 请求拦截器：把 localStorage 里的 token 塞进 Header
 service.interceptors.request.use(config => {
+    NProgress.start() // 【关键】开始进度条
     // 1. 处理 Token
     const token = localStorage.getItem('wf_token')
     if (token) {
@@ -28,33 +30,22 @@ service.interceptors.request.use(config => {
 
     return config
 }, (error) => {
+    NProgress.done() // 【关键】开始进度条
     return Promise.reject(error)
 })
 
-// 2. 请求拦截器：每条请求都会带上 Token
-service.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('wf_token');
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
 
 // 3. 响应拦截器：统一处理成功与失败
 service.interceptors.response.use(
     (response) => {
         // 直接返回数据部分，过滤掉 Axios 包装的 metadata
+        NProgress.done();
         return response.data;
     },
     (error) => {
+        NProgress.done();
         const { response } = error;
         let message = '网络异常，请稍后再试';
-
         if (response) {
             // 这里可以针对性处理错误
             switch (response.status) {

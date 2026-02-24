@@ -1,9 +1,8 @@
 <script setup>
-import {ref, provide} from 'vue'
+import {ref, onMounted, provide} from 'vue'
+import {useUserStore} from '@/stores/user'
 
-// import { useUserStore } from '@/stores/user'
-
-// const userStore = useUserStore()
+const userStore = useUserStore()
 
 const toast = ref({
   show: false,
@@ -12,7 +11,7 @@ const toast = ref({
 })
 
 const showToast = (msg, type = 'success') => {
-  toast.value = { show: true, message: msg, type }
+  toast.value = {show: true, message: msg, type}
   setTimeout(() => {
     toast.value.show = false
   }, 3000) // 3秒后自动消失
@@ -22,21 +21,22 @@ const showToast = (msg, type = 'success') => {
 provide('globalToast', showToast)
 
 
-// onMounted(async() => {
-//   const token = localStorage.getItem('wf_token')
-//   if (token) {
-//     try {
-//       // 刷新页面后，在这里重新拉取最新数据
-//       await userStore.fetchUserInfo()
-//     } catch (err) {
-//       console.error('Session expired')
-//     }
-//   }
-// })
+onMounted(async () => {
+  // 只在没有用户信息时才去拉取，避免路由切换重复请求
+  if (!userStore.userInfo) {
+    try {
+      await userStore.fetchUserInfo()
+    } catch (err) {
+      console.error('获取用户信息失败', err)
+      // 这里可以做跳转登录页的处理
+    }
+  }
+})
+
 
 </script>
 <template>
-  <router-view />
+  <router-view/>
   <div v-if="toast.show" class="toast toast-top toast-center z-[100] mt-4">
     <div :class="['alert shadow-2xl border-none text-white px-8 min-w-[200px]',
                toast.type === 'success' ? 'alert-success' : 'alert-error']">
@@ -56,6 +56,7 @@ provide('globalToast', showToast)
   transform: translate(-50%, -20px);
   opacity: 0;
 }
+
 .toast-enter-to {
   transform: translate(-50%, 0);
   opacity: 1;

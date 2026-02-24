@@ -63,7 +63,7 @@ const handleDelete = async (ws) => {
   // 像写同步代码一样调用弹窗
   const isConfirmed = await confirm({
     title: '确认删除空间？',
-    message: `你正在尝试删除空间 <span class="text-error font-bold">${ws.name}</span>。此操作不可撤销。`,
+    message: `你正在尝试删除空间 <span class="text-error font-bold">${ws.displayName}</span>。此操作不可撤销。`,
     confirmText: '立即删除',
     type: 'danger'
   })
