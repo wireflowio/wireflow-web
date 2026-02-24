@@ -4,7 +4,7 @@ export interface Workspace {
     id: string;
     slug: string;
     namespace?: string;
-    displayName?:string;
+    displayName?: string;
     nodeCount: number;
     tokenCount: number;
     maxNodes: number;
@@ -16,4 +16,5 @@ export interface Workspace {
 export const add = (data) => request.post('/workspaces/add', data);
 
 export const listWs = (data) => request.get('/workspaces/list', data)
+export const deleteWs = (id) => request.delete(`/workspaces/${id}`);
 

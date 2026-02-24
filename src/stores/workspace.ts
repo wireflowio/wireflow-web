@@ -1,26 +1,67 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
+
+// 建议定义接口，提升开发时的代码提示
+interface Workspace {
+    id: string
+    displayName: string
+    [key: string]: any
+}
 
 export const useWorkspaceStore = defineStore('workspace', () => {
-    // 1. 状态：尝试从缓存初始化，否则为 null
-    const currentWorkspace = ref(JSON.parse(localStorage.getItem('active_ws') || 'null'))
+    const route = useRoute()
 
-    // 2. 计算属性：获取当前 ID
-    const activeId = computed(() => currentWorkspace.value?.id || '')
+    // 1. 状态管理
+    // 使用 shallowRef 提升性能（如果 Workspace 对象很复杂且你不需要深层响应）
+    const currentWorkspace = ref<Workspace | null>(
+        JSON.parse(localStorage.getItem('active_ws') || 'null')
+    )
 
-    // 3. 切换空间的方法
-    function switchWorkspace(ws: any) {
+    // 2. 计算属性：统一暴露当前 ID
+    // 核心优化：优先从 URL 获取，URL 没有再看 Store 缓存（单一事实来源原则）
+    const activeId = computed(() => {
+        return (route?.params?.wsId as string) || currentWorkspace.value?.id || ''
+    })
+
+    // 3. 切换空间
+    function switchWorkspace(ws: Workspace) {
+        if (!ws) return
         currentWorkspace.value = ws
+        // 建议：只存必要的 ID 或对象，减少缓存压力
         localStorage.setItem('active_ws', JSON.stringify(ws))
-        localStorage.setItem('active_ws_id', ws.id) // 存个纯 ID 给拦截器用
+        localStorage.setItem('active_ws_id', ws.id)
     }
 
-    // 4. 清理方法（注销时用）
+    // 4. 同步逻辑：监听路由变化（关键！）
+    // 当用户点击浏览器后退或手动改 URL 时，同步更新 Store 里的对象
+    // 假设你有一个所有的 workspace 列表 rows
+    const rows = ref<Workspace[]>([])
+
+    // 更新列表数据
+    function setRows(data: any[]) {
+        rows.value = data
+    }
+
+    watch(() => route.params.wsId, (newId) => {
+        if (newId && newId !== currentWorkspace.value?.id) {
+            const found = rows.value.find(item => item.id === newId)
+            if (found) currentWorkspace.value = found
+        }
+    }, { immediate: true })
+
     function clear() {
         currentWorkspace.value = null
         localStorage.removeItem('active_ws')
         localStorage.removeItem('active_ws_id')
     }
 
-    return { currentWorkspace, activeId, switchWorkspace, clear }
+    return {
+        currentWorkspace,
+        activeId,
+        rows, // 存放列表数据
+        switchWorkspace,
+        setRows,
+        clear
+    }
 })

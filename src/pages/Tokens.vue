@@ -4,6 +4,7 @@ import {create, rmToken, listTokens} from '@/api/token';
 import {useConfirm} from '@/composables/useConfirm' // 引入插件
 import Pagination from '@/components/Pagination.vue'
 import {useAction, useTable} from '@/composables/useApi'
+import {getFirstChar, getAvatarColor} from '@/composables/useTheme'
 
 const {confirm} = useConfirm()
 const showModal = ref(false);
@@ -130,9 +131,26 @@ const handleDelete = async (token) => {
     </div>
 
     <div class="bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
-      <div class="p-4 bg-base-200/30 border-b border-base-300 flex items-center justify-between">
-        <span class="text-[10px] font-bold opacity-40 uppercase tracking-widest">Active Enrollment Tokens</span>
-        <span class="badge badge-sm font-mono opacity-50">{{ rows.length }} Tokens Total</span>
+      <div class="p-4 bg-base-200/30 border-b border-base-300 flex items-center gap-4">
+        <div class="relative flex-1 w-full md:max-w-md">
+          <svg class="w-4 h-4 absolute left-3 top-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input v-model="params.search"
+                 @keyup.enter="refresh"
+                 class="input input-bordered input-sm w-full pl-10 bg-base-100 focus:border-primary"
+                 placeholder="搜索Token名称..."/>
+          <button
+              @click="refresh"
+              class="absolute right-2 top-1.5 btn btn-ghost btn-xs opacity-50 hover:opacity-100"
+          >
+            Enter
+          </button>
+        </div>
+        <div class="hidden sm:flex gap-2 text-[10px] font-bold opacity-40 uppercase">
+          Sorted by: Updated At
+        </div>
       </div>
 
       <div class="divide-y divide-base-300">
@@ -144,8 +162,13 @@ const handleDelete = async (token) => {
 
           <div class="flex items-center gap-4 w-full md:w-2/5">
             <div class="avatar placeholder">
-              <div class="bg-neutral text-neutral-content rounded-full w-8">
-                <span class="text-xs">TK</span>
+              <div
+                  :class="[
+    'w-6 h-6 flex items-center justify-center rounded-md text-[10px] font-bold text-white shadow-sm transition-transform group-hover:scale-110',
+    getAvatarColor(r.token)
+  ]"
+              >
+                {{ getFirstChar(r.token) }}
               </div>
             </div>
             <div class="truncate">

@@ -1,4 +1,5 @@
 import {inject, onMounted, ref, watch} from 'vue'
+import type {ApiResponse, PageParams, TableOptions} from '@/composables/table';
 
 /**
  * 通用请求封装钩子
@@ -41,64 +42,73 @@ export interface PageParams {
     pageSize: number,
 }
 
+interface RequestOptions {
+    initialParams?: any;
+    immediate?: boolean;
+    successMsg?: string;
+}
 
-// src/composables/useTable.ts
-//分页使用
-// src/composables/useTable.ts
-export function useTable(apiFunc, options = {}) {
-    // 1. 解构 options，设置默认值
+
+// T 代表行数据的类型，例如 User 或 Workspace
+export function useTable<T>(
+    apiFunc: (p: PageParams) => Promise<ApiResponse<T>>,
+    options: TableOptions = {}
+) {
+    // 1. 设置默认值，TS 现在知道 options 的结构了
     const {
         initialParams = {},
         immediate = true,
-        successMsg = '', // 列表通常默认为空，不弹窗
+        successMsg = '',
         errorMsg = '获取数据失败'
-    } = options
+    } = options;
 
-    const toast = inject('globalToast')
-    const loading = ref(false)
-    const rows = ref([])
-    const total = ref(0)
+    // 获取全局 toast 提示函数类型（假设你定义了其类型）
+    const toast = inject<(msg: string, type: 'success' | 'error') => void>('globalToast');
 
-    // 初始化参数
-    const params: PageParams = ref({
+    const loading = ref(false);
+    const rows = ref<T[]>([]) as any; // 声明 rows 是 T 类型的数组
+    const total = ref(0);
+
+    // 2. 初始化参数，使用 Partial 允许部分覆盖
+    const params = ref<PageParams>({
         page: 1,
         pageSize: 4,
         search: '',
         ...initialParams
-    })
+    });
 
     const refresh = async () => {
-        loading.value = true
+        loading.value = true;
         try {
-            // 1. 解构字段名要和后端 JSON 标签一致 (Code -> code, Msg -> msg)
-            const {code, data, msg} = await apiFunc(params.value)
+            const {code, data, msg} = await apiFunc(params.value);
 
-            // 2. 判断逻辑改为检查状态码
             if (code === 200) {
-                rows.value = data?.list || []
-                total.value = data?.total || 0
+                rows.value = data?.list || [];
+                total.value = data?.total || 0;
+                if (successMsg) toast?.(successMsg, 'success');
             } else {
-                // 使用后端返回的 msg
-                toast(msg || errorMsg, 'error')
+                toast?.(msg || errorMsg, 'error');
             }
         } catch (err) {
-            console.error('Table fetch error:', err)
-            toast('网络请求异常', 'error')
+            console.error('Table fetch error:', err);
+            toast?.('网络请求异常', 'error');
         } finally {
-            loading.value = false
+            loading.value = false;
         }
-    }
+    };
 
-    // 监听逻辑
-    watch(() => params.value.page, refresh)
+    // 3. 监听逻辑
+    watch(() => params.value.page, refresh);
+
+    // 搜索词变化时重置页码
     watch(() => params.value.search, () => {
-        params.value.page = 1
-        refresh()
-    })
+        params.value.page = 1;
+        refresh();
+    });
 
-    if (immediate) onMounted(refresh)
+    if (immediate) onMounted(refresh);
 
-    return {loading, rows, total, params, refresh}
+    return {loading, rows, total, params, refresh};
 }
 
 // src/composables/useAction.ts
@@ -128,7 +138,7 @@ export function useAction(apiFunc, options = {}) {
                 }
             }
         } catch (err) {
-            toast('系统繁忙，请稍后再试', 'error')
+            toast('系统繁忙，请稍后再试', err)
             return false
         } finally {
             loading.value = false

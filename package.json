@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
+    "@types/nprogress": "^0.2.3",
     "@vitejs/plugin-vue": "^6.0.3",
     "daisyui": "^5.5.14",
     "tailwindcss": "^4.1.18",
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "axios": "^1.13.4",
+    "nprogress": "^0.2.0",
     "pinia": "^3.0.4",
     "vue": "^3.5.27",
     "vue-router": "^4.6.4"

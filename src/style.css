@@ -1,2 +1,18 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+/* 修改进度条颜色 */
+#nprogress .bar {
+    background: #2563eb !important; /* 你的 primary 蓝色 */
+    height: 2px !important; /* 细一点更精致 */
+}
+
+/* 修改右上角的阴影效果 */
+#nprogress .peg {
+    box-shadow: 0 0 10px #2563eb, 0 0 5px #2563eb !important;
+}
+
+/* 如果你希望进度条出现在 topNav 下方而不是屏幕最顶部 */
+#nprogress .bar {
+    top: 56px !important; /* 根据你 TopNav 的高度调整 */
+}

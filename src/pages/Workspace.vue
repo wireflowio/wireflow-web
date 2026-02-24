@@ -2,12 +2,15 @@
 import {onMounted, watch, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import Icon from '../components/icons/Icon.vue'
-import {add, Workspace, listWs} from "@/api/workspace";
+import {add, Workspace, listWs, deleteWs} from "@/api/workspace";
 import {useAction,useTable} from '@/composables/useApi'
 import {useWorkspaceStore} from '@/stores/workspace'
 import SideDrawer from "../components/SideDrawer.vue";
 import Pagination  from "../components/Pagination.vue";
+import {getFirstChar, getAvatarColor} from '@/composables/useTheme'
+import {useConfirm} from '@/composables/useConfirm'
 
+const {confirm} = useConfirm()
 const router = useRouter()
 
 const workspaceStore = useWorkspaceStore()
@@ -30,8 +33,8 @@ const form = ref({ ...initialForm })
 
 // 2. 列表数据流
 const { rows, total, loading, params, refresh } = useTable(listWs, {
-  successMsg: '数据已同步',
-  errorMsg: '无法获取空间列表',
+  successMsg: '列表已刷新',
+  errorMsg: '无法刷新列表',
 })
 
 // 3. 监听分页参数变化：当页码切换时自动刷新
@@ -56,9 +59,24 @@ const openDrawer = (type: 'view' | 'edit' | 'create') => {
   isDrawerOpen.value = true
 }
 
-const handleDelete = (ws) => {
-  if (confirm(`确认要销毁工作空间 "${ws.name}" 吗？此操作不可逆。`)) {
-    console.log('Deleting workspace:', ws.id)
+const handleDelete = async (ws) => {
+  // 像写同步代码一样调用弹窗
+  const isConfirmed = await confirm({
+    title: '确认删除空间？',
+    message: `你正在尝试删除空间 <span class="text-error font-bold">${ws.displayName}</span>。此操作不可撤销。`,
+    confirmText: '立即删除',
+    type: 'danger'
+  })
+
+  if (isConfirmed) {
+    loading.value = true
+    try {
+      // 调用你的删除 API
+      await deleteWs(ws.id)
+      await refresh() // 刷新列表
+    } finally {
+      loading.value = false
+    }
   }
 }
 
@@ -89,10 +107,19 @@ const handleCreate = async () => {
             <p class="text-xs text-slate-400 font-medium">共 {{ total || 0 }} 个可用隔离区</p>
           </div>
         </div>
-        <button @click="openDrawer('create')" class="btn btn-primary btn-sm rounded-lg px-4 h-9">
-          <Icon name="plus" class="w-3.5 h-3.5 mr-1"/>
-          新建空间
-        </button>
+        <div class="flex gap-2">
+          <button class="btn btn-ghost border-base-300 rounded-xl" @click="refresh">
+            <svg :class="['w-4 h-4', loading ? 'animate-spin' : '']" fill="none" stroke="currentColor"
+                 viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+          <button @click="openDrawer('create')" class="btn btn-primary btn-sm rounded-lg px-4 h-9">
+            <Icon name="plus" class="w-3.5 h-3.5 mr-1"/>
+            新建空间
+          </button>
+        </div>
       </header>
 
       <main>
@@ -104,13 +131,21 @@ const handleCreate = async () => {
         <div
             v-for="ws in rows"
             :key="ws.id"
-            class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300 flex flex-col overflow-hidden"
+            class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300 flex flex-col"
         >
           <div class="p-4 flex justify-between items-start">
             <div class="flex items-center gap-3 min-w-0">
+<!--              <div-->
+<!--                  class="w-9 h-9 shrink-0 rounded-lg bg-slate-50 flex items-center justify-center font-bold text-sm text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">-->
+<!--                {{ ws.displayName[0] }}-->
+<!--              </div>-->
               <div
-                  class="w-9 h-9 shrink-0 rounded-lg bg-slate-50 flex items-center justify-center font-bold text-sm text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                {{ ws.displayName[0] }}
+                  :class="[
+    'w-6 h-6 flex items-center justify-center rounded-md text-[10px] font-bold text-white shadow-sm transition-transform group-hover:scale-110',
+    getAvatarColor(ws.displayName)
+  ]"
+              >
+                {{ getFirstChar(ws.displayName) }}
               </div>
               <div class="min-w-0">
                 <h3 class="font-bold text-sm text-slate-800 truncate group-hover:text-primary transition-colors">
@@ -147,13 +182,29 @@ const handleCreate = async () => {
 
           <div class="p-3 mt-2 flex justify-between items-center bg-slate-50/50 group-hover:bg-white transition-colors">
             <div class="dropdown">
-              <label tabindex="0" class="btn btn-ghost btn-xs btn-square opacity-40 hover:opacity-100">
-                <Icon name="more" class="w-3.5 h-3.5"/>
+              <label tabindex="0"
+                     class="btn btn-ghost btn-xs btn-square opacity-60 hover:opacity-100 hover:bg-slate-100 active:scale-90 transition-all">
+                <Icon name="more" class="w-4 h-4 text-slate-500"/>
               </label>
+
               <ul tabindex="0"
-                  class="dropdown-content z-[50] menu p-1 shadow-lg bg-base-100 rounded-lg w-32 border border-slate-100 text-[11px]">
-                <li><a class="py-1">编辑设置</a></li>
-                <li><a @click="handleDelete(ws)" class="text-error py-1">销毁空间</a></li>
+                  class="dropdown-content z-[50] menu p-1.5 shadow-2xl bg-white/95 backdrop-blur-sm rounded-xl w-36 border border-slate-200/60 mt-1">
+
+                <li>
+                  <a class="flex items-center gap-2.5 py-2 px-3 rounded-lg hover:bg-slate-100 active:bg-slate-200 transition-colors text-slate-600"
+                     @click="handleEdit(ws)">
+                    <Icon name="edit" class="w-3.5 h-3.5 opacity-70"/>
+                    <span class="font-medium">编辑设置</span>
+                  </a>
+                </li>
+
+                <li>
+                  <a class="flex items-center gap-2.5 py-2 px-3 rounded-lg text-error/90 hover:bg-error/10 active:bg-error/20 transition-colors"
+                     @click="handleDelete(ws)">
+                    <Icon name="trash" class="w-3.5 h-3.5"/>
+                    <span class="font-medium">销毁空间</span>
+                  </a>
+                </li>
               </ul>
             </div>
             <button @click="enterWorkspace(ws)" class="btn btn-primary btn-xs rounded-md px-3 font-bold shadow-none">

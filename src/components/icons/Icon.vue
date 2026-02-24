@@ -67,6 +67,34 @@ const paths = computed(() => {
       return ['M11 19a8 8 0 110-16 8 8 0 010 16z', 'M21 21l-4.35-4.35', 'M8 11h6']
     case 'center':
       return ['M12 2v4', 'M12 18v4', 'M2 12h4', 'M18 12h4', 'M8 12a4 4 0 118 0a4 4 0 01-8 0z']
+    case 'workspace': // 工作空间：类似图层或三个方块叠加的感官
+      return [
+        'M12 2L2 7l10 5 10-5-10-5z',
+        'M2 17l10 5 10-5',
+        'M2 12l10 5 10-5'
+      ]
+
+    case 'peering': // 对等连接：两个互联的节点或交换箭头
+      return [
+        'M2 8L7 3l5 5',
+        'M17 16l5 5-5-5', // 这里的逻辑可以写成双向箭头
+        'M22 16l-5 5-5-5',
+        'M7 3v13',
+        'M17 21V8',
+        'M2 8h10',
+        'M12 16h10'
+      ]
+
+      // 为了美观，我再顺手帮你补一个通用的 'edit' 和 'trash' 以备不时之需
+    case 'edit':
+      return ['M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7', 'M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z']
+
+    case 'trash':
+      return ['M3 6h18', 'M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2']
+
+    case 'chevron-right': // 你 Sidebar 底部用到了这个
+      return ['M9 18l6-6-6-6']
+
     default:
       return ['M4 4h16v16H4V4z']
   }

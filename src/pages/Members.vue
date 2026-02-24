@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import {ref, watch, onUnmounted, computed} from 'vue'
-import {add} from '@/api/user'
+import {computed, ref} from 'vue'
+import {add, listUser, Member} from '@/api/user'
 import SideDrawer from '@/components/SideDrawer.vue'
 import Pagination from '@/components/Pagination.vue'
+import {useAction, useTable} from '@/composables/useApi'
+import {getFirstChar, getAvatarColor} from '@/composables/useTheme'
+import {listWs} from '@/api/workspace'
+import {useConfirm} from '@/composables/useConfirm'
+import {deleteUser} from '@/api/user'
+import Icon from "@/components/icons/Icon.vue";
 
-import { listWs} from "@/api/workspace";
-import {useAction,useTable} from '@/composables/useApi'
-import {useWorkspaceStore} from '@/stores/workspace'
-
-import {Member} from '@/api/user'
+const {confirm} = useConfirm()
 
 const {loading:addLoading, execute: runAdd} = useAction(add, {
   successMsg: "添加用户成功",
@@ -16,9 +18,14 @@ const {loading:addLoading, execute: runAdd} = useAction(add, {
 })
 
 // 2. 列表空间数据流
-const { rows, total, loading, params, refresh } = useTable(listWs, {
-  successMsg: '数据已同步',
-  errorMsg: '无法获取空间列表',
+const { rows:members, total, loading, params, refresh } = useTable(listUser, {
+  successMsg: '列表已刷新',
+  errorMsg: '无法刷新列表',
+})
+
+const { rows, total:wsTotal, loading: wsLoading, params:wsParams, wsRefresh } = useTable(listWs, {
+  successMsg: '列表已刷新',
+  errorMsg: '无法刷新列表',
 })
 
 // --- 状态控制 ---
@@ -28,25 +35,25 @@ const selectedMember = ref<Member | null>(null)
 const isAddingNs = ref(false)
 const newNsSelection = ref('')
 
-const members = ref<Member[]>([
-  {
-    id: 1, name: 'System Admin', email: 'ladmin@example.com',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin',
-    provider: 'local', role: 'Admin', sa: 'wireflow-admin', status: 'active',
-    lastActive: '现在', tenantId: 'all-namespaces',
-    vip: '10.8.0.1',
-    bindings: [
-      { ns: 'tenant-a-ns', role: 'Admin', quota: 'Unlimited' },
-      { ns: 'global-platform-ns', role: 'Viewer (Read-only)', quota: 'CPU: 1C' }
-    ]
-  }
-])
+// const members = ref<Member[]>([
+//   {
+//     id: 1, name: 'System Admin', email: 'ladmin@example.com',
+//     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin',
+//     provider: 'local', role: 'Admin', sa: 'wireflow-admin', status: 'active',
+//     lastActive: '现在', tenantId: 'all-namespaces',
+//     vip: '10.8.0.1',
+//     bindings: [
+//       { ns: 'tenant-a-ns', role: 'Admin', quota: 'Unlimited' },
+//       { ns: 'global-platform-ns', role: 'Viewer (Read-only)', quota: 'CPU: 1C' }
+//     ]
+//   }
+// ])
 
 //还再带一个wsID
 const tenantNamespaces = computed(() => {
-  if (!rows.value) return []
+  if (!members.value) return []
 
-  return rows.value.map(ws => ({
+  return members.value.map(ws => ({
     id: ws.id,             // 提交时使用的唯一标识
     name: ws.displayName,  // 页面显示的名称
     slug: ws.slug          // (可选) 命名空间，有时提交也需要用到
@@ -54,13 +61,13 @@ const tenantNamespaces = computed(() => {
 })
 
 const roleTemplates = [
-  { name: 'Admin', desc: '完全控制权', color: 'text-blue-600 bg-blue-50 border-blue-100' },
+  { name: 'admin', desc: '完全控制权', color: 'text-blue-600 bg-blue-50 border-blue-100' },
   { name: 'editor', desc: '可管理资源', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
   { name: 'viewer', desc: '只读权限', color: 'text-slate-600 bg-slate-50 border-slate-100' }
 ]
 
 const form = ref({
-  email: '', username: '', password: '', role: 'editor', tenant: 'tenant-a-ns', provider: 'local' as 'local' | 'dex'
+  email: '', username: '', password: '', role: 'editor', namespace: 'tenant-a-ns', provider: 'local' as 'local' | 'dex'
 })
 
 // --- 逻辑处理 ---
@@ -94,28 +101,87 @@ const addNsBinding = () => {
 }
 
 const handleSave = async () => {
- await runAdd(form.value)
+  await runAdd(form.value)
+  await refresh()
 }
 
 const getRoleStyle = (roleName: string) => roleTemplates.find(t => t.name === roleName)?.color || ''
+
+// 预设颜色池 (Tailwind 颜色类)
+const colorSchemes = [
+  { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200' },
+  { bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-200' },
+  { bg: 'bg-violet-100', text: 'text-violet-700', border: 'border-violet-200' },
+  { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200' },
+  { bg: 'bg-rose-100', text: 'text-rose-700', border: 'border-rose-200' },
+  { bg: 'bg-cyan-100', text: 'text-cyan-700', border: 'border-cyan-200' },
+  { bg: 'bg-indigo-100', text: 'text-indigo-700', border: 'border-indigo-200' }
+]
+
+// 获取固定颜色的函数
+const getBadgeColor = (name) => {
+  if (!name) return colorSchemes[0];
+  // 计算字符串的 hash 值
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  // 取模得到索引
+  const index = Math.abs(hash) % colorSchemes.length;
+  return colorSchemes[index];
+}
+
+
+const handleDelete = async (user) => {
+  // 像写同步代码一样调用弹窗
+  const isConfirmed = await confirm({
+    title: '确认删除用户？',
+    message: `你正在尝试删除用户 <span class="text-error font-bold">${user.name}</span>。此操作不可撤销。`,
+    confirmText: '立即删除',
+    type: 'danger'
+  })
+
+  if (isConfirmed) {
+    loading.value = true
+    try {
+      // 调用你的删除 API
+      await deleteUser(user.id)
+      await refresh() // 刷新列表
+    } finally {
+      loading.value = false
+    }
+  }
+}
+
 </script>
 
 <template>
   <div class="max-w-7xl mx-auto p-4 lg:p-8 space-y-6">
-    <div
-        class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-base-300 pb-6">
-      <div>
-        <h1 class="text-3xl font-extrabold tracking-tight flex items-center gap-3 text-slate-900">
-          <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </div>
-          团队管理
-        </h1>
+
+    <header class="flex items-center justify-between pb-4 border-b border-slate-200">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-primary rounded-xl text-white shadow-sm">
+          <Icon name="user" class="w-5 h-5"/>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-slate-900 tracking-tight">用户管理</h1>
+          <p class="text-xs text-slate-400 font-medium">Wireflow 用户管理中心</p>
+        </div>
       </div>
-      <button class="btn btn-primary px-8 rounded-xl" @click="openDrawer('invite')">+ 添加成员</button>
-    </div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost border-base-300 rounded-xl" @click="refresh">
+          <svg :class="['w-4 h-4', loading ? 'animate-spin' : '']" fill="none" stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+        <button @click="openDrawer('create')" class="btn btn-primary btn-sm rounded-lg px-4 h-9">
+          <Icon name="plus" class="w-3.5 h-3.5 mr-1"/>
+          新建空间
+        </button>
+      </div>
+    </header>
 
     <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
       <table class="w-full text-left">
@@ -141,15 +207,63 @@ const getRoleStyle = (roleName: string) => roleTemplates.find(t => t.name === ro
 
         <tr v-for="m in members" :key="m.id" class="hover:bg-slate-50/50">
           <td class="px-6 py-4 flex items-center gap-3">
-            <img :src="m.avatar" class="w-8 h-8 rounded-full" />
+<!--            <img :src="m.avatar" class="w-8 h-8 rounded-full" />-->
+            <div
+                :class="[
+    'w-6 h-6 flex items-center justify-center rounded-md text-[10px] font-bold text-white shadow-sm transition-transform group-hover:scale-110',
+    getAvatarColor(m.name)
+  ]"
+            >
+              {{ getFirstChar(m.name) }}
+            </div>
             <div class="text-sm font-bold text-slate-900">{{ m.name }}</div>
           </td>
-          <td class="px-6 py-4"><code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">{{ m.tenantId }}</code></td>
+
+          <td class="px-6 py-2 align-middle"> <div class="flex flex-wrap items-center gap-1.5 min-h-[24px]"> <span
+              v-for="ws in m.workspaces"
+              :key="ws.id"
+              :class="[
+        'inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-tight border transition-all duration-200',
+        'leading-none whitespace-nowrap', // 3. 强制行高为 1，防止文字撑开间距
+        getBadgeColor(ws.displayName).bg,
+        getBadgeColor(ws.displayName).text,
+        'border-transparent hover:border-current'
+      ]"
+          >
+      {{ ws.displayName }}
+    </span>
+
+            <span v-if="!m.workspaces?.length" class="text-[11px] text-slate-400 font-normal italic leading-none">
+      No workspaces
+    </span>
+          </div>
+          </td>
+
           <td class="px-6 py-4">
             <span class="px-2 py-1 text-[10px] font-bold rounded border" :class="getRoleStyle(m.role)">{{ m.role }}</span>
           </td>
-          <td class="px-6 py-4 text-right">
-            <button @click="openConfig(m)" class="text-blue-600 hover:underline text-xs font-bold">配置授权</button>
+          <td class="px-6 py-4">
+            <div class="flex items-center justify-end gap-3">
+              <button
+                  @click="openConfig(m)"
+                  class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md text-xs font-semibold transition-colors shadow-sm"
+              >
+                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                </svg>
+                配置授权
+              </button>
+
+              <button
+                  @click="handleDelete(m)"
+                  class="btn btn-ghost btn-sm text-error/40 hover:text-error"
+                  title="删除用户"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
           </td>
         </tr>
         </tbody>
@@ -158,14 +272,12 @@ const getRoleStyle = (roleName: string) => roleTemplates.find(t => t.name === ro
         <table class="w-full text-left">
         </table>
 
-<!--        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/30">-->
           <Pagination
               v-model:page="params.page"
               v-model:pageSize="params.pageSize"
-              :total="members.length"
+              :total="total"
               item-name="成员"
           />
-<!--        </div>-->
       </div>
     </div>
 
