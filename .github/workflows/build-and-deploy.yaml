@@ -30,7 +30,11 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: .         # 必须确保这一行存在，它代表使用 checkout 后的当前路径
+          file: ./Dockerfile  # 明确指定 Dockerfile 路径
           push: true
+          # 禁用所有缓存，彻底杀掉那个旧域名
+          no-cache: true
+          pull: true          # 强制拉取最新的基础镜像
           # 这样会触发 Dockerfile 里的 npm install 和 npm build
           tags: ghcr.io/wireflowio/wireflow-web:dev

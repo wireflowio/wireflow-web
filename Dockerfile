@@ -1,5 +1,5 @@
 # ---- build stage ----
-FROM docker.1ms.run/library/node:20-alpine AS build
+FROM node:20-alpine AS build
 WORKDIR /app
 
 # 先拷贝依赖清单，利用缓存
@@ -11,7 +11,7 @@ COPY . .
 RUN npm run build
 
 # ---- runtime stage ----
-FROM docker.1ms.run/library/nginx:1.27-alpine
+FROM nginx:1.27-alpine
 # 覆盖默认站点配置，支持 SPA fallback
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
