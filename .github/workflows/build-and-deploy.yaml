@@ -33,4 +33,4 @@ jobs:
           context: .
           push: true
           # 这样会触发 Dockerfile 里的 npm install 和 npm build
-          tags: ${{ secrets.DOCKER_USERNAME }}/wireflow-web:dev
+          tags: ghcr.io/wireflowio/wireflow-web:dev
