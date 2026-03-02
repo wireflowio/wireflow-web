@@ -1,11 +1,11 @@
 import {inject, onMounted, ref, watch} from 'vue'
-import type {ApiResponse, PageParams, TableOptions} from '@/composables/table';
+import type {ApiResponse, PageParams, TableOptions} from '@/types/table';
 
 /**
  * 通用请求封装钩子
  * @param {Function} apiFunc - 你的 API 请求函数 (来自 @/api/*)
  */
-export function useApi(apiFunc) {
+export function useApi(apiFunc?: any) {
     const data = ref(null)
     const loading = ref(false)
     const error = ref(null)
@@ -35,17 +35,6 @@ export function useApi(apiFunc) {
         error,
         execute
     }
-}
-
-export interface PageParams {
-    page: number,
-    pageSize: number,
-}
-
-interface RequestOptions {
-    initialParams?: any;
-    immediate?: boolean;
-    successMsg?: string;
 }
 
 

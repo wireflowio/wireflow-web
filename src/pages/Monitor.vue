@@ -3,6 +3,18 @@ import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 // 假设你已经有了一个通用的 Icon 组件
 import Icon from '../components/icons/Icon.vue'
+import { useMonitorStore } from '@/stores/monitor'
+
+const store = useMonitorStore()
+
+// 模拟自动刷新：每 5 秒拉取一次最新快照
+let timer = null
+onMounted(() => {
+  store.fetchSnapshots() // 初始加载
+  timer = setInterval(() => store.fetchSnapshots(), 5000)
+})
+
+onUnmounted(() => clearInterval(timer))
 
 const route = useRoute()
 const wsId = computed(() => route.params.wsId as string || 'default-workspace')

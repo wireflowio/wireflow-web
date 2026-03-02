@@ -1,5 +1,15 @@
 {
   "compilerOptions": {
+    "target": "ESNext",
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"  // <--- 确保包含这一行
+    ],
+    "types": ["vite/client"],  // <--- 核心配置
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
