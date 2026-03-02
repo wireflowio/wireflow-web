@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed,onMounted, onUnmounted} from 'vue'
 import { useRoute } from 'vue-router'
 // 假设你已经有了一个通用的 Icon 组件
-import Icon from '../components/icons/Icon.vue'
+import Icon from '@/components/icons/Icon.vue'
 import { useMonitorStore } from '@/stores/monitor'
+import { useWorkspaceStore} from '@/stores/workspace'
 
 const store = useMonitorStore()
+const workspaceStore = useWorkspaceStore()
 
 // 模拟自动刷新：每 5 秒拉取一次最新快照
 let timer = null
+
 onMounted(() => {
-  store.fetchSnapshots() // 初始加载
-  timer = setInterval(() => store.fetchSnapshots(), 5000)
+  store.refresh(workspaceStore.activeId) // 初始加载
+  timer = setInterval(() => store.refresh(workspaceStore.activeId), 5000)
 })
 
 onUnmounted(() => clearInterval(timer))

@@ -7,6 +7,7 @@ export interface NodeSnapshot {
     status: 'online' | 'offline';
     health_level: 'success' | 'warning' | 'error';
     metrics: Record<string, string>; // 动态 Map，如 { "cpu": "5%", "uptime": "2h" }
+    raw_metrics: Record<string, number>;
     x?: number;
     y?: number;
 }

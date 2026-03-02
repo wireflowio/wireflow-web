@@ -5,7 +5,7 @@ import axios, {
     AxiosRequestConfig
 } from 'axios';
 import router from '@/router';
-import NProgress from '@/composables/progress';
+import NProgress from '@/types/progress';
 import type { ApiResponse } from '@/types/api';
 
 // 1. 创建实例
