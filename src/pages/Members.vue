@@ -63,7 +63,7 @@ const tenantNamespaces = computed(() => {
 const roleTemplates = [
   { name: 'admin', desc: '完全控制权', color: 'text-blue-600 bg-blue-50 border-blue-100' },
   { name: 'editor', desc: '可管理资源', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
-  { name: 'viewer', desc: '只读权限', color: 'text-slate-600 bg-slate-50 border-slate-100' }
+  { name: 'viewer', desc: '只读权限', color: 'text-base-content/70 bg-slate-50 border-slate-100' }
 ]
 
 const form = ref({
@@ -164,8 +164,8 @@ const handleDelete = async (user) => {
           <Icon name="user" class="w-5 h-5"/>
         </div>
         <div>
-          <h1 class="text-xl font-bold text-slate-900 tracking-tight">用户管理</h1>
-          <p class="text-xs text-slate-400 font-medium">Wireflow 用户管理中心</p>
+          <h1 class="text-xl font-bold text-base-content tracking-tight">用户管理</h1>
+          <p class="text-xs text-base-content/40 font-medium">Wireflow 用户管理中心</p>
         </div>
       </div>
       <div class="flex gap-2">
@@ -183,10 +183,10 @@ const handleDelete = async (user) => {
       </div>
     </header>
 
-    <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+    <div class="bg-base-100 border border-slate-200 rounded-xl overflow-hidden shadow-sm">
       <table class="w-full text-left">
         <thead class="bg-slate-50 border-b border-slate-200">
-        <tr class="text-xs font-semibold text-slate-500 uppercase">
+        <tr class="text-xs font-semibold text-base-content/60 uppercase">
           <th class="px-6 py-4">成员</th>
           <th class="px-6 py-4">主 Namespace</th>
           <th class="px-6 py-4">业务角色</th>
@@ -196,7 +196,7 @@ const handleDelete = async (user) => {
         <tbody class="divide-y divide-slate-100">
         <tr v-if="members.length === 0">
           <td colspan="4" class="py-20">
-            <div class="flex flex-col items-center justify-center text-slate-400">
+            <div class="flex flex-col items-center justify-center text-base-content/40">
               <svg class="w-12 h-12 mb-3 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
               </svg>
@@ -216,7 +216,7 @@ const handleDelete = async (user) => {
             >
               {{ getFirstChar(m.name) }}
             </div>
-            <div class="text-sm font-bold text-slate-900">{{ m.name }}</div>
+            <div class="text-sm font-bold text-base-content">{{ m.name }}</div>
           </td>
 
           <td class="px-6 py-2 align-middle"> <div class="flex flex-wrap items-center gap-1.5 min-h-[24px]"> <span
@@ -233,7 +233,7 @@ const handleDelete = async (user) => {
       {{ ws.displayName }}
     </span>
 
-            <span v-if="!m.workspaces?.length" class="text-[11px] text-slate-400 font-normal italic leading-none">
+            <span v-if="!m.workspaces?.length" class="text-[11px] text-base-content/40 font-normal italic leading-none">
       No workspaces
     </span>
           </div>
@@ -268,7 +268,7 @@ const handleDelete = async (user) => {
         </tr>
         </tbody>
       </table>
-      <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+      <div class="bg-base-100 border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         <table class="w-full text-left">
         </table>
 
@@ -291,40 +291,40 @@ const handleDelete = async (user) => {
 
         <div v-if="drawerType === 'invite'" class="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
           <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-white/5">
-            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 block">账户类型</label>
+            <label class="text-[11px] font-bold text-base-content/40 uppercase tracking-wider mb-3 block">账户类型</label>
             <div class="flex p-1 bg-slate-200/50 dark:bg-slate-900/50 rounded-xl">
               <button @click="form.provider = 'local'"
-                      :class="form.provider === 'local' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-500'"
+                      :class="form.provider === 'local' ? 'bg-base-100 dark:bg-slate-700 shadow-sm text-blue-600' : 'text-base-content/60'"
                       class="flex-1 py-2 rounded-lg text-xs font-bold transition-all">本地账号</button>
               <button @click="form.provider = 'dex'"
-                      :class="form.provider === 'dex' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-500'"
+                      :class="form.provider === 'dex' ? 'bg-base-100 dark:bg-slate-700 shadow-sm text-blue-600' : 'text-base-content/60'"
                       class="flex-1 py-2 rounded-lg text-xs font-bold transition-all">SSO / Dex</button>
             </div>
           </div>
 
           <div class="space-y-4 px-1">
             <div class="group">
-              <label class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 block group-focus-within:text-blue-600">用户名</label>
+              <label class="text-xs font-bold text-base-content/70 dark:text-base-content/40 mb-1.5 block group-focus-within:text-blue-600">用户名</label>
               <input v-model="form.username" type="email" placeholder="name@example.com"
-                     class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                     class="w-full bg-base-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
             </div>
 
             <div v-if="form.provider === 'local'" class="group">
-              <label class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 block">初始密码</label>
+              <label class="text-xs font-bold text-base-content/70 dark:text-base-content/40 mb-1.5 block">初始密码</label>
               <input v-model="form.password" type="password" placeholder="••••••••"
-                     class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20" />
+                     class="w-full bg-base-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20" />
             </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div class="group">
-                <label class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 block">业务角色</label>
-                <select v-model="form.role" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
+                <label class="text-xs font-bold text-base-content/70 dark:text-base-content/40 mb-1.5 block">业务角色</label>
+                <select v-model="form.role" class="w-full bg-base-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
                   <option v-for="r in roleTemplates" :key="r.name">{{ r.name }}</option>
                 </select>
               </div>
               <div class="group">
-                <label class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 block">主空间</label>
-                <select v-model="form.namespace" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
+                <label class="text-xs font-bold text-base-content/70 dark:text-base-content/40 mb-1.5 block">主空间</label>
+                <select v-model="form.namespace" class="w-full bg-base-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
                   <option v-for="r in rows" :key="r.id" :value="r.namespace">{{ r.displayName }}</option>
                 </select>
               </div>
@@ -343,51 +343,51 @@ const handleDelete = async (user) => {
 
           <section class="space-y-4">
             <div class="flex justify-between items-center px-1">
-              <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">已授权命名空间</h3>
+              <h3 class="text-xs font-black text-base-content/40 uppercase tracking-widest">已授权命名空间</h3>
               <button @click="isAddingNs = true" class="text-xs font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded-lg transition-colors">+ 新增绑定</button>
             </div>
 
-            <div v-if="isAddingNs" class="p-4 bg-blue-50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/20 rounded-2xl space-y-3 animate-in zoom-in-95 duration-200">
+            <div v-if="isAddingNs" class="p-4 bg-blue-50 dark:bg-primary/5 border border-blue-100 dark:border-blue-500/20 rounded-2xl space-y-3 animate-in zoom-in-95 duration-200">
               <label class="text-[10px] font-bold text-blue-600 uppercase">选择目标空间</label>
-              <select v-model="newNsSelection" class="w-full bg-white dark:bg-slate-900 border-none rounded-xl text-sm p-2.5 shadow-sm outline-none">
+              <select v-model="newNsSelection" class="w-full bg-base-100 dark:bg-slate-900 border-none rounded-xl text-sm p-2.5 shadow-sm outline-none">
                 <option value="">请选择...</option>
                 <option v-for="ns in tenantNamespaces" :key="ns.id">{{ ns }}</option>
               </select>
               <div class="flex gap-2">
                 <button @click="addNsBinding" class="flex-1 bg-blue-600 text-white text-xs font-bold py-2 rounded-xl shadow-md">确认添加</button>
-                <button @click="isAddingNs = false" class="px-4 py-2 text-xs font-bold text-slate-500">取消</button>
+                <button @click="isAddingNs = false" class="px-4 py-2 text-xs font-bold text-base-content/60">取消</button>
               </div>
             </div>
 
             <div class="grid gap-3">
               <div v-for="item in selectedMember.bindings" :key="item.ns"
-                   class="group relative p-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 hover:border-blue-300 dark:hover:border-blue-500/50 transition-all shadow-sm">
+                   class="group relative p-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-base-100 dark:bg-slate-900 hover:border-blue-300 dark:hover:border-blue-500/50 transition-all shadow-sm">
 
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-2">
             <span class="relative flex h-2 w-2">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
             </span>
                     <span class="text-sm font-black font-mono tracking-tight text-slate-700 dark:text-slate-200">{{ item.ns }}</span>
                   </div>
-                  <button @click="removeNsBinding(item.ns)" class="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all">
+                  <button @click="removeNsBinding(item.ns)" class="opacity-0 group-hover:opacity-100 p-1.5 text-base-content/40 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round"/></svg>
                   </button>
                 </div>
 
                 <div class="flex items-end justify-between gap-4">
                   <div class="flex-1 space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">权限级别</label>
-                    <select v-model="item.role" class="w-full bg-slate-50 dark:bg-white/5 border-none rounded-lg text-[11px] font-bold py-1.5 px-2 outline-none focus:ring-1 focus:ring-blue-500/30">
+                    <label class="text-[9px] font-black text-base-content/40 uppercase tracking-tighter">权限级别</label>
+                    <select v-model="item.role" class="w-full bg-slate-50 dark:bg-base-100/5 border-none rounded-lg text-[11px] font-bold py-1.5 px-2 outline-none focus:ring-1 focus:ring-blue-500/30">
                       <option>Namespace Admin</option>
                       <option>Developer (Edit)</option>
                       <option>Viewer (Read-only)</option>
                     </select>
                   </div>
                   <div class="text-right">
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-tighter block mb-1">配额控制</label>
-                    <span class="text-[10px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-white/5 px-2 py-1 rounded-md">{{ item.quota }}</span>
+                    <label class="text-[9px] font-black text-base-content/40 uppercase tracking-tighter block mb-1">配额控制</label>
+                    <span class="text-[10px] font-mono font-bold text-base-content/60 bg-slate-100 dark:bg-base-100/5 px-2 py-1 rounded-md">{{ item.quota }}</span>
                   </div>
                 </div>
               </div>
@@ -399,7 +399,7 @@ const handleDelete = async (user) => {
       <template #footer>
         <div class="flex items-center gap-3 w-full p-1">
           <button @click="isDrawerOpen = false"
-                  class="flex-1 px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors">
+                  class="flex-1 px-4 py-2.5 text-sm font-bold text-base-content/60 hover:bg-slate-100 dark:hover:bg-base-100/5 rounded-xl transition-colors">
             取消
           </button>
           <button @click="handleSave"

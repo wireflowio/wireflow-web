@@ -697,7 +697,7 @@ spec:
 
           <div class="w-120 bg-neutral flex flex-col border-l border-base-300 hidden lg:flex shadow-2xl">
             <div
-                class="px-4 py-3 bg-black/30 text-[10px] font-bold text-slate-400 tracking-widest flex justify-between items-center border-b border-white/5">
+                class="px-4 py-3 bg-black/30 text-[10px] font-bold text-base-content/40 tracking-widest flex justify-between items-center border-b border-white/5">
               <span>LIVE YAML PREVIEW</span>
               <div class="flex gap-1">
                 <div class="w-2 h-2 rounded-full bg-red-500/50"></div>

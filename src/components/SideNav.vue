@@ -57,12 +57,11 @@ const isPathActive = (path) => route.path.startsWith(path)
 
 
 </script>
-
 <template>
   <aside class="lg:sticky lg:top-[88px] max-h-[calc(100vh-120px)] flex flex-col gap-4 overflow-y-auto custom-sidebar pb-4">
-    <div class="bg-white/40 backdrop-blur-md rounded-3xl border border-slate-200/60 p-3 shadow-sm shrink-0">
+    <div class="bg-base-100/40 backdrop-blur-md rounded-3xl border border-base-content/10 p-3 shadow-sm shrink-0">
       <div v-for="(group, idx) in menuGroups" :key="group.group">
-        <div class="px-4 text-[10px] uppercase font-bold tracking-[0.15em] text-slate-400 mb-2" :class="{ 'mt-6': idx !== 0 }">
+        <div class="px-4 text-[10px] uppercase font-bold tracking-[0.15em] text-base-content/40 mb-2" :class="{ 'mt-6': idx !== 0 }">
           {{ group.group }}
         </div>
 
@@ -73,7 +72,8 @@ const isPathActive = (path) => route.path.startsWith(path)
                 class="flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all duration-300 group"
                 :class="isPathActive(c.to)
                 ? 'bg-primary text-primary-content shadow-md shadow-primary/20 font-semibold'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
+                /* 3. 未激活状态：使用 base-content 的不同透明度替代 slate-600 和 slate-100/900 */
+                : 'text-base-content/70 hover:bg-base-content/5 hover:text-base-content'"
             >
               <Icon :name="c.icon" class="w-4 h-4 transition-transform group-hover:scale-110" />
               <span class="text-sm tracking-wide">{{ c.name }}</span>
@@ -84,10 +84,10 @@ const isPathActive = (path) => route.path.startsWith(path)
       </div>
     </div>
 
-    <div class="mt-auto bg-white/60 backdrop-blur-md rounded-3xl border border-slate-200/60 overflow-hidden shadow-sm group transition-all hover:shadow-md shrink-0">
-      <router-link to="/profile" class="block p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors">
+    <div class="mt-auto bg-base-100/60 backdrop-blur-md rounded-3xl border border-base-content/10 overflow-hidden shadow-sm group transition-all hover:shadow-md shrink-0">
+      <router-link to="/profile" class="block p-4 border-b border-base-content/5 hover:bg-base-content/5 transition-colors">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-primary font-bold shadow-inner">AD</div>
+          <div class="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-inner">AD</div>
           <div class="flex-1 min-w-0">
             <div class="text-sm font-bold truncate">{{ userStore.userInfo?.username }}</div>
             <div class="text-[10px] opacity-40 truncate">Enterprise Plan</div>
@@ -96,9 +96,9 @@ const isPathActive = (path) => route.path.startsWith(path)
         </div>
       </router-link>
 
-      <div class="p-4 bg-slate-50/50 space-y-3">
+      <div class="p-4 bg-base-content/5 space-y-3">
         <div class="flex items-center justify-between">
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">控制面状态</span>
+          <span class="text-[10px] font-bold text-base-content/40 uppercase tracking-tighter">控制面状态</span>
           <div class="flex items-center gap-1.5">
             <span class="relative flex h-2 w-2">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
@@ -112,15 +112,15 @@ const isPathActive = (path) => route.path.startsWith(path)
   </aside>
 </template>
 
-<style scoped>
-.custom-sidebar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.custom-sidebar::-webkit-scrollbar {
-  display: none;
-}
-.router-link-active {
-  transform: scale(1.02) translateX(4px);
-}
-</style>
+<!--<style scoped>-->
+<!--.custom-sidebar {-->
+<!--  scrollbar-width: none;-->
+<!--  -ms-overflow-style: none;-->
+<!--}-->
+<!--.custom-sidebar::-webkit-scrollbar {-->
+<!--  display: none;-->
+<!--}-->
+<!--.router-link-active {-->
+<!--  transform: scale(1.02) translateX(4px);-->
+<!--}-->
+<!--</style>-->

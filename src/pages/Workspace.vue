@@ -103,8 +103,8 @@ const handleCreate = async () => {
             <Icon name="workspace" class="w-5 h-5"/>
           </div>
           <div>
-            <h1 class="text-xl font-bold text-slate-900 tracking-tight">工作空间</h1>
-            <p class="text-xs text-slate-400 font-medium">共 {{ total || 0 }} 个可用隔离区</p>
+            <h1 class="text-xl font-bold text-base-content tracking-tight">工作空间</h1>
+            <p class="text-xs text-base-content/40 font-medium">共 {{ total || 0 }} 个可用隔离区</p>
           </div>
         </div>
         <div class="flex gap-2">
@@ -131,12 +131,12 @@ const handleCreate = async () => {
         <div
             v-for="ws in rows"
             :key="ws.id"
-            class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300 flex flex-col"
+            class="group bg-base-100 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300 flex flex-col"
         >
           <div class="p-4 flex justify-between items-start">
             <div class="flex items-center gap-3 min-w-0">
 <!--              <div-->
-<!--                  class="w-9 h-9 shrink-0 rounded-lg bg-slate-50 flex items-center justify-center font-bold text-sm text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">-->
+<!--                  class="w-9 h-9 shrink-0 rounded-lg bg-slate-50 flex items-center justify-center font-bold text-sm text-base-content/40 group-hover:bg-primary/10 group-hover:text-primary transition-colors">-->
 <!--                {{ ws.displayName[0] }}-->
 <!--              </div>-->
               <div
@@ -159,20 +159,20 @@ const handleCreate = async () => {
 
           <div class="px-4 py-2 flex items-center justify-between border-y border-slate-50">
             <div class="text-center flex-1">
-              <div class="text-[9px] uppercase font-bold text-slate-400">Nodes</div>
+              <div class="text-[9px] uppercase font-bold text-base-content/40">Nodes</div>
               <div class="text-sm font-bold text-slate-700">{{ ws.nodeCount }}</div>
             </div>
             <div class="w-px h-6 bg-slate-100"></div>
             <div class="text-center flex-1">
-              <div class="text-[9px] uppercase font-bold text-slate-400">Tokens</div>
+              <div class="text-[9px] uppercase font-bold text-base-content/40">Tokens</div>
               <div class="text-sm font-bold text-slate-700">{{ ws.tokenCount }}</div>
             </div>
           </div>
 
           <div class="px-4 pt-3 text-[9px] font-bold">
             <div class="flex justify-between mb-1.5">
-              <span class="text-slate-400 uppercase">Quota Usage</span>
-              <span class="text-slate-500">{{ ws.nodeCount }}/{{ ws.maxNodes }}</span>
+              <span class="text-base-content/40 uppercase">Quota Usage</span>
+              <span class="text-base-content/60">{{ ws.nodeCount }}/{{ ws.maxNodes }}</span>
             </div>
             <div class="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
               <div class="h-full bg-primary transition-all duration-700"
@@ -180,18 +180,18 @@ const handleCreate = async () => {
             </div>
           </div>
 
-          <div class="p-3 mt-2 flex justify-between items-center bg-slate-50/50 group-hover:bg-white transition-colors">
+          <div class="p-3 mt-2 flex justify-between items-center bg-slate-50/50 group-hover:bg-base-100 transition-colors">
             <div class="dropdown">
               <label tabindex="0"
                      class="btn btn-ghost btn-xs btn-square opacity-60 hover:opacity-100 hover:bg-slate-100 active:scale-90 transition-all">
-                <Icon name="more" class="w-4 h-4 text-slate-500"/>
+                <Icon name="more" class="w-4 h-4 text-base-content/60"/>
               </label>
 
               <ul tabindex="0"
-                  class="dropdown-content z-[50] menu p-1.5 shadow-2xl bg-white/95 backdrop-blur-sm rounded-xl w-36 border border-slate-200/60 mt-1">
+                  class="dropdown-content z-[50] menu p-1.5 shadow-2xl bg-base-100/95 backdrop-blur-sm rounded-xl w-36 border border-slate-200/60 mt-1">
 
                 <li>
-                  <a class="flex items-center gap-2.5 py-2 px-3 rounded-lg hover:bg-slate-100 active:bg-slate-200 transition-colors text-slate-600"
+                  <a class="flex items-center gap-2.5 py-2 px-3 rounded-lg hover:bg-slate-100 active:bg-slate-200 transition-colors text-base-content/70"
                      @click="handleEdit(ws)">
                     <Icon name="edit" class="w-3.5 h-3.5 opacity-70"/>
                     <span class="font-medium">编辑设置</span>
@@ -220,18 +220,18 @@ const handleCreate = async () => {
           <div class="inline-flex p-6 bg-slate-50 rounded-full mb-4">
             <Icon name="workspace" class="w-12 h-12 text-slate-200"/>
           </div>
-          <p class="text-sm font-bold text-slate-400">未找到匹配的空间，请尝试新建</p>
+          <p class="text-sm font-bold text-base-content/40">未找到匹配的空间，请尝试新建</p>
         </div>
       </main>
 
 <!--      <footer class="flex justify-between items-center pt-6 border-t border-slate-100">-->
-<!--        <div class="text-[11px] text-slate-400 font-medium">-->
+<!--        <div class="text-[11px] text-base-content/40 font-medium">-->
 <!--          显示 {{ rows.length }} 条，共 {{ total }} 条数据-->
 <!--        </div>-->
 
 
       <footer class="flex justify-between items-center pt-6 border-t border-slate-100">
-        <div class="text-[11px] text-slate-400 font-medium">
+        <div class="text-[11px] text-base-content/40 font-medium">
           显示 {{ rows.length }} 条，共 {{ total }} 条数据
         </div>
         <Pagination
@@ -253,20 +253,20 @@ const handleCreate = async () => {
 
           <div class="flex-1 overflow-y-auto p-6 space-y-6">
             <div class="space-y-1.5">
-              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">空间显示名称</label>
+              <label class="text-[10px] font-black text-base-content/40 uppercase tracking-widest">空间显示名称</label>
               <input v-model="form.displayName" type="text" placeholder="例如：上海核心机房"
                      class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all"/>
             </div>
 
             <div class="space-y-1.5">
-              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">命名空间 (K8s
+              <label class="text-[10px] font-black text-base-content/40 uppercase tracking-widest">命名空间 (K8s
                 Namespace)</label>
               <input v-model="form.slug" type="text" placeholder="wf-prod-sh"
                      class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono outline-none focus:ring-2 focus:ring-primary/20 transition-all"/>
             </div>
 
             <div class="space-y-1.5">
-              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">资源配额 (Max
+              <label class="text-[10px] font-black text-base-content/40 uppercase tracking-widest">资源配额 (Max
                 Nodes)</label>
               <select v-model="form.maxNodeCount"
                       class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none">

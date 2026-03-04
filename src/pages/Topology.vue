@@ -80,7 +80,7 @@ function center() { window.dispatchEvent(new CustomEvent('wf-topology-center')) 
 
         <div class="absolute top-6 right-6 pointer-events-none">
           <div class="bg-slate-900/80 backdrop-blur-md border border-white/10 p-4 rounded-2xl shadow-2xl text-white pointer-events-auto">
-            <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Link Quality / 链路质量</div>
+            <div class="text-[10px] font-bold uppercase tracking-widest text-base-content/40 mb-3">Link Quality / 链路质量</div>
 
             <div class="space-y-2">
               <div class="flex items-center gap-3 text-xs">

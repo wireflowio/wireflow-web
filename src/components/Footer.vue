@@ -7,7 +7,7 @@
             v-for="link in footerLinks"
             :key="link.name"
             :href="link.href"
-            class="text-sm font-medium text-slate-500 hover:text-primary transition-colors duration-300"
+            class="text-sm font-medium text-base-content/60 hover:text-primary transition-colors duration-300"
         >
           {{ link.name }}
         </a>
@@ -16,13 +16,13 @@
       <div class="flex flex-col items-center gap-3">
         <div class="flex items-center gap-2 opacity-80">
           <div class="w-6 h-6 bg-slate-200 dark:bg-base-300 rounded-lg flex items-center justify-center">
-            <svg width="14" height="14" viewBox="0 0 32 32" fill="none" class="text-slate-500">
+            <svg width="14" height="14" viewBox="0 0 32 32" fill="none" class="text-base-content/60">
               <path d="M18 6L10 18H16L14 26L22 14H16L18 6Z" fill="currentColor" />
             </svg>
           </div>
-          <span class="text-sm font-black tracking-widest uppercase text-slate-400">Wireflow</span>
+          <span class="text-sm font-black tracking-widest uppercase text-base-content/40">Wireflow</span>
         </div>
-        <p class="text-xs text-slate-400 font-medium tracking-wide">
+        <p class="text-xs text-base-content/40 font-medium tracking-wide">
           下一代自动化网络编排控制台
         </p>
       </div>
@@ -31,13 +31,13 @@
         <div class="flex items-center gap-4 px-4 py-2 bg-slate-100/50 dark:bg-base-200/50 rounded-full border border-slate-200/40">
           <div class="flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
-            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tight">System Operational</span>
+            <span class="text-[10px] font-bold text-base-content/60 uppercase tracking-tight">System Operational</span>
           </div>
           <div class="w-px h-3 bg-slate-300/50"></div>
-          <div class="text-[10px] font-mono text-slate-400 uppercase">Latency: 14ms</div>
+          <div class="text-[10px] font-mono text-base-content/40 uppercase">Latency: 14ms</div>
         </div>
 
-        <div class="text-[10px] text-slate-400/60 font-medium text-center space-y-1">
+        <div class="text-[10px] text-base-content/40/60 font-medium text-center space-y-1">
           <p>© 2026 Wireflow Project. All rights reserved.</p>
           <p class="italic">提示：本项目为自托管服务，数据存储于您的本地实例。</p>
         </div>

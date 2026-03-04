@@ -60,17 +60,17 @@ onBeforeUnmount(() => {
   window.removeEventListener('wf-topology-center', onCenterEvent)
 })
 </script>
-
 <template>
-  <div class="w-full h-[520px] bg-base-100">
+  <div class="w-full h-[520px] bg-base-100 transition-colors duration-300">
     <svg class="w-full h-full select-none" :viewBox="viewBox">
       <defs>
         <filter id="wfShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.15" />
+          <feDropShadow dx="0" dy="2" stdDeviation="2"
+                        flood-color="black"
+                        flood-opacity="0.2" />
         </filter>
       </defs>
 
-      <!-- Links -->
       <g>
         <line
             v-for="l in props.links"
@@ -79,40 +79,40 @@ onBeforeUnmount(() => {
             :y1="nodeById.get(l.from)?.y"
             :x2="nodeById.get(l.to)?.x"
             :y2="nodeById.get(l.to)?.y"
-            class="stroke-[3] opacity-80"
+            class="stroke-[3] opacity-50"
             :class="linkClass(l)"
         />
       </g>
 
-      <!-- Nodes -->
       <g>
         <g
             v-for="n in props.nodes"
             :key="n.id"
-            class="cursor-pointer"
+            class="cursor-pointer group"
             @click="onSelect(n)"
         >
           <circle
               :cx="n.x"
               :cy="n.y"
               r="18"
-              :fill="nodeFill(n)"
               filter="url(#wfShadow)"
+              :class="n.status === 'online' ? 'fill-success' : 'fill-neutral'"
           />
+
           <circle
               :cx="n.x"
               :cy="n.y"
               r="26"
               fill="transparent"
-              class="stroke-base-300 opacity-70"
+              class="stroke-base-content/10"
               stroke-width="2"
           />
+
           <text
               :x="n.x"
               :y="n.y + 42"
               text-anchor="middle"
-              class="fill-base-content"
-              style="font-size: 12px; opacity: .85;"
+              class="fill-base-content font-bold text-[12px] opacity-80"
           >
             {{ n.name }}
           </text>
@@ -120,8 +120,7 @@ onBeforeUnmount(() => {
               :x="n.x"
               :y="n.y + 58"
               text-anchor="middle"
-              class="fill-base-content"
-              style="font-size: 11px; opacity: .6;"
+              class="fill-base-content/50 font-mono text-[11px]"
           >
             {{ n.ip }}
           </text>

@@ -92,26 +92,26 @@ const logs = ref([
           <Icon name="activity" class="w-5 h-5" />
         </div>
         <div>
-          <h1 class="text-xl font-black tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
+          <h1 class="text-xl font-black tracking-tighter text-base-content dark:text-white flex items-center gap-2">
             实时态势监控
-            <span class="text-[10px] px-2 py-0.5 bg-slate-100 dark:bg-white/5 rounded text-slate-400 font-mono">WS: {{ wsId }}</span>
+            <span class="text-[10px] px-2 py-0.5 bg-slate-100 dark:bg-base-100/5 rounded text-base-content/40 font-mono">WS: {{ wsId }}</span>
           </h1>
           <div class="flex items-center gap-2 mt-0.5">
             <span class="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Real-time Data Stream Active</span>
+            <span class="text-[9px] font-black text-base-content/40 uppercase tracking-[0.2em]">Real-time Data Stream Active</span>
           </div>
         </div>
       </div>
-      <div class="flex items-center gap-2 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200/50">
-        <button class="px-4 py-1.5 text-[10px] font-black rounded-lg transition-all bg-white dark:bg-slate-800 shadow-sm text-blue-600">实时流</button>
-        <button class="px-4 py-1.5 text-[10px] font-black rounded-lg transition-all text-slate-400 hover:text-slate-600">历史回溯</button>
+      <div class="flex items-center gap-2 bg-slate-100 dark:bg-base-100/5 p-1 rounded-xl border border-slate-200/50">
+        <button class="px-4 py-1.5 text-[10px] font-black rounded-lg transition-all bg-base-100 dark:bg-slate-800 shadow-sm text-blue-600">实时流</button>
+        <button class="px-4 py-1.5 text-[10px] font-black rounded-lg transition-all text-base-content/40 hover:text-base-content/70">历史回溯</button>
       </div>
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div v-for="s in liveStats" :key="s.label"
-           class="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-white/5 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group">
-        <div class="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2 flex justify-between">
+           class="bg-base-100 dark:bg-slate-900 border border-slate-200/60 dark:border-white/5 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group">
+        <div class="text-[9px] font-black uppercase text-base-content/40 tracking-widest mb-2 flex justify-between">
           {{ s.label }}
           <Icon :name="s.trend" class="w-3 h-3" :class="s.trend === 'up' ? 'text-blue-500' : 'text-emerald-500'" />
         </div>
@@ -119,18 +119,18 @@ const logs = ref([
           <span class="text-3xl font-black tracking-tighter" :class="s.color">{{ s.value }}</span>
           <span class="text-[10px] font-bold opacity-30 font-mono uppercase">{{ s.unit }}</span>
         </div>
-        <div class="mt-4 h-1 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-          <div class="h-full bg-blue-500 opacity-40 animate-progress" :style="{ width: '70%' }"></div>
+        <div class="mt-4 h-1 w-full bg-slate-100 dark:bg-base-100/5 rounded-full overflow-hidden">
+          <div class="h-full bg-primary opacity-40 animate-progress" :style="{ width: '70%' }"></div>
         </div>
       </div>
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
-      <div class="xl:col-span-2 bg-white dark:bg-slate-900 border border-slate-200/60 rounded-2xl overflow-hidden min-h-[280px] flex flex-col">
+      <div class="xl:col-span-2 bg-base-100 dark:bg-slate-900 border border-slate-200/60 rounded-2xl overflow-hidden min-h-[280px] flex flex-col">
         <div class="px-5 py-3 border-b border-slate-50 dark:border-white/5 flex justify-between items-center">
-          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 italic">全域吞吐量走势 (Throughput)</span>
+          <span class="text-[10px] font-black uppercase tracking-widest text-base-content/40 italic">全域吞吐量走势 (Throughput)</span>
           <div class="flex gap-3">
-            <span class="flex items-center gap-1.5 text-[9px] font-bold text-blue-500"><span class="w-2 h-0.5 bg-blue-500"></span> TX</span>
+            <span class="flex items-center gap-1.5 text-[9px] font-bold text-blue-500"><span class="w-2 h-0.5 bg-primary"></span> TX</span>
             <span class="flex items-center gap-1.5 text-[9px] font-bold text-indigo-400"><span class="w-2 h-0.5 bg-indigo-400"></span> RX</span>
           </div>
         </div>
@@ -139,32 +139,32 @@ const logs = ref([
         </div>
       </div>
 
-      <div class="bg-white dark:bg-slate-900 border border-slate-200/60 rounded-2xl flex flex-col">
+      <div class="bg-base-100 dark:bg-slate-900 border border-slate-200/60 rounded-2xl flex flex-col">
         <div class="px-5 py-3 border-b border-slate-50 dark:border-white/5">
-          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">链路质量排行 (Latency)</span>
+          <span class="text-[10px] font-black uppercase tracking-widest text-base-content/40">链路质量排行 (Latency)</span>
         </div>
         <div class="p-5 space-y-5 flex-1">
           <div v-for="i in 3" :key="i" class="space-y-2">
             <div class="flex justify-between text-[11px] font-bold italic">
-              <span class="text-slate-500">Node-{{i}} <Icon name="arrow-right" class="w-2 h-2 inline mx-1 opacity-20"/> Gateway</span>
+              <span class="text-base-content/60">Node-{{i}} <Icon name="arrow-right" class="w-2 h-2 inline mx-1 opacity-20"/> Gateway</span>
               <span :class="i === 3 ? 'text-amber-500' : 'text-emerald-500'">{{ 18 + i * 12 }}ms</span>
             </div>
-            <div class="w-full h-1 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-              <div class="h-full bg-blue-500 transition-all duration-1000" :style="{ width: (25 + i * 20) + '%' }"></div>
+            <div class="w-full h-1 bg-slate-100 dark:bg-base-100/5 rounded-full overflow-hidden">
+              <div class="h-full bg-primary transition-all duration-1000" :style="{ width: (25 + i * 20) + '%' }"></div>
             </div>
           </div>
-          <div class="mt-4 p-4 bg-slate-50 dark:bg-white/5 rounded-xl border border-dashed border-slate-200 dark:border-white/10">
+          <div class="mt-4 p-4 bg-slate-50 dark:bg-base-100/5 rounded-xl border border-dashed border-slate-200 dark:border-white/10">
             <span class="text-[9px] font-black text-blue-500 uppercase">智能诊断</span>
-            <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">当前工作空间内 80% 的节点已通过 P2P 成功握手，平均链路质量优于全球 92% 的用户。</p>
+            <p class="text-[10px] text-base-content/60 mt-1 leading-relaxed">当前工作空间内 80% 的节点已通过 P2P 成功握手，平均链路质量优于全球 92% 的用户。</p>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="bg-white dark:bg-slate-900 border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm">
-      <div class="px-6 py-4 border-b border-slate-50 dark:border-white/5 flex justify-between items-center bg-slate-50/30 dark:bg-white/[0.02]">
+    <div class="bg-base-100 dark:bg-slate-900 border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-slate-50 dark:border-white/5 flex justify-between items-center bg-slate-50/30 dark:bg-base-100/[0.02]">
         <div class="flex items-center gap-3">
-          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">节点实时链路状态</span>
+          <span class="text-[10px] font-black uppercase tracking-widest text-base-content/40">节点实时链路状态</span>
         </div>
         <div class="flex gap-4">
           <div class="flex items-center gap-1.5 text-[9px] font-bold text-emerald-500"><Icon name="zap" class="w-3 h-3"/> P2P</div>
@@ -174,7 +174,7 @@ const logs = ref([
       <div class="overflow-x-auto">
         <table class="table table-xs w-full">
           <thead>
-          <tr class="text-slate-400 border-b border-slate-50 dark:border-white/5">
+          <tr class="text-base-content/40 border-b border-slate-50 dark:border-white/5">
             <th class="pl-6 py-4 text-[9px] font-black uppercase">节点名称 / VIP</th>
             <th class="text-[9px] font-black uppercase">连接模式</th>
             <th class="text-[9px] font-black uppercase">最后握手</th>
@@ -184,11 +184,11 @@ const logs = ref([
           </tr>
           </thead>
           <tbody class="divide-y divide-slate-50 dark:divide-white/5">
-          <tr v-for="n in nodes" :key="n.id" class="group hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-colors">
+          <tr v-for="n in nodes" :key="n.id" class="group hover:bg-slate-50/50 dark:hover:bg-base-100/[0.01] transition-colors">
             <td class="pl-6 py-4">
               <div class="flex flex-col">
                 <span class="font-bold text-slate-700 dark:text-slate-200 text-[13px] tracking-tight">{{ n.name }}</span>
-                <span class="text-[10px] font-mono text-slate-400 mt-0.5">{{ n.vip }}</span>
+                <span class="text-[10px] font-mono text-base-content/40 mt-0.5">{{ n.vip }}</span>
               </div>
             </td>
             <td>
@@ -202,32 +202,32 @@ const logs = ref([
                 <span class="text-[10px] font-mono text-slate-300 hidden lg:inline">{{ n.endpoint }}</span>
               </div>
             </td>
-            <td class="font-bold text-[11px] text-slate-600 dark:text-slate-400 italic">
+            <td class="font-bold text-[11px] text-base-content/70 dark:text-base-content/40 italic">
               {{ n.lastHandshake }}
             </td>
             <td>
               <div class="flex items-center gap-3">
                 <div class="flex flex-col">
                   <span class="text-[8px] font-black text-slate-300 uppercase italic">RX</span>
-                  <span class="text-[11px] font-mono font-bold text-slate-600">{{ n.totalRx }}</span>
+                  <span class="text-[11px] font-mono font-bold text-base-content/70">{{ n.totalRx }}</span>
                 </div>
-                <div class="h-6 w-px bg-slate-100 dark:bg-white/5"></div>
+                <div class="h-6 w-px bg-slate-100 dark:bg-base-100/5"></div>
                 <div class="flex flex-col">
                   <span class="text-[8px] font-black text-slate-300 uppercase italic">TX</span>
-                  <span class="text-[11px] font-mono font-bold text-slate-600">{{ n.totalTx }}</span>
+                  <span class="text-[11px] font-mono font-bold text-base-content/70">{{ n.totalTx }}</span>
                 </div>
               </div>
             </td>
             <td>
               <div class="flex items-center gap-3">
-                <div class="w-10 h-5 bg-slate-50 dark:bg-white/5 rounded flex items-end gap-0.5 p-0.5 overflow-hidden">
-                  <div v-for="b in 4" :key="b" class="flex-1 bg-blue-500/30 rounded-t-[1px] animate-pulse" :style="{ height: Math.random()*100+'%' }"></div>
+                <div class="w-10 h-5 bg-slate-50 dark:bg-base-100/5 rounded flex items-end gap-0.5 p-0.5 overflow-hidden">
+                  <div v-for="b in 4" :key="b" class="flex-1 bg-primary/30 rounded-t-[1px] animate-pulse" :style="{ height: Math.random()*100+'%' }"></div>
                 </div>
                 <span class="text-[11px] font-black text-blue-600">{{ n.currentRate }}</span>
               </div>
             </td>
             <td class="text-right pr-6">
-                <span :class="['px-2 py-0.5 rounded text-[9px] font-black uppercase', n.online ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400']">
+                <span :class="['px-2 py-0.5 rounded text-[9px] font-black uppercase', n.online ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-base-content/40']">
                   {{ n.online ? 'Active' : 'Offline' }}
                 </span>
             </td>
@@ -239,14 +239,14 @@ const logs = ref([
 
     <div class="bg-slate-900 rounded-2xl border border-white/5 overflow-hidden">
       <div class="px-5 py-3 border-b border-white/5 flex justify-between items-center">
-        <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Workspace Event Stream</span>
+        <span class="text-[9px] font-black text-base-content/60 uppercase tracking-[0.2em]">Workspace Event Stream</span>
         <button class="text-[9px] font-black text-blue-500 uppercase hover:underline">Full Logs</button>
       </div>
       <div class="p-2 divide-y divide-white/[0.02]">
-        <div v-for="(log, i) in logs" :key="i" class="flex items-center gap-4 px-4 py-2 hover:bg-white/[0.02] transition-all">
-          <span class="text-[9px] font-mono text-slate-600">{{ log.time }}</span>
+        <div v-for="(log, i) in logs" :key="i" class="flex items-center gap-4 px-4 py-2 hover:bg-base-100/[0.02] transition-all">
+          <span class="text-[9px] font-mono text-base-content/70">{{ log.time }}</span>
           <span :class="['text-[9px] font-black px-1.5 rounded uppercase', log.level === 'info' ? 'text-blue-500' : 'text-amber-500']">{{ log.level }}</span>
-          <span class="text-[11px] text-slate-400 font-medium tracking-tight">{{ log.msg }}</span>
+          <span class="text-[11px] text-base-content/40 font-medium tracking-tight">{{ log.msg }}</span>
         </div>
       </div>
     </div>
