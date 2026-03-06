@@ -1,3 +1,4 @@
+
 import {inject, onMounted, ref, watch} from 'vue'
 import type {ApiResponse, PageParams, TableOptions} from '@/types/table';
 
@@ -10,18 +11,19 @@ export function useApi(apiFunc?: any) {
     const loading = ref(false)
     const error = ref(null)
 
-    const execute = async (...args) => {
+    // 修复1：给 rest 参数加上类型注解
+    const execute = async (...args: any[]) => {
         loading.value = true
         error.value = null
 
         try {
             const res = await apiFunc(...args)
-            // 这里的 res.data 取决于你 axios 拦截器的封装
             data.value = res.data || res
             return {success: true, data: data.value}
         } catch (err) {
-            // 提取后端返回的错误信息
-            const errorMsg = err.response?.data?.message || err.message || '请求失败'
+            // 修复2：将 err 断言为 any 再访问属性
+            const e = err as any
+            const errorMsg = e?.response?.data?.message || e?.message || '请求失败'
             error.value = errorMsg
             return {success: false, error: errorMsg}
         } finally {
@@ -43,7 +45,6 @@ export function useTable<T>(
     apiFunc: (p: PageParams) => Promise<ApiResponse<T>>,
     options: TableOptions = {}
 ) {
-    // 1. 设置默认值，TS 现在知道 options 的结构了
     const {
         initialParams = {},
         immediate = true,
@@ -51,14 +52,12 @@ export function useTable<T>(
         errorMsg = '获取数据失败'
     } = options;
 
-    // 获取全局 toast 提示函数类型（假设你定义了其类型）
     const toast = inject<(msg: string, type: 'success' | 'error') => void>('globalToast');
 
     const loading = ref(false);
-    const rows = ref<T[]>([]) as any; // 声明 rows 是 T 类型的数组
+    const rows = ref<T[]>([]) as any;
     const total = ref(0);
 
-    // 2. 初始化参数，使用 Partial 允许部分覆盖
     const params = ref<PageParams>({
         page: 1,
         pageSize: 4,
@@ -86,10 +85,8 @@ export function useTable<T>(
         }
     };
 
-    // 3. 监听逻辑
     watch(() => params.value.page, refresh);
 
-    // 搜索词变化时重置页码
     watch(() => params.value.search, () => {
         params.value.page = 1;
         refresh();
@@ -100,34 +97,29 @@ export function useTable<T>(
     return {loading, rows, total, params, refresh};
 }
 
-// src/composables/useAction.ts
-// 为不需要rows, list操作使用
-export function useAction(apiFunc, options = {}) {
-    const toast = inject('globalToast')
+// 修复3：给 useAction 的参数加上类型注解
+export function useAction(apiFunc: (...args: any[]) => Promise<any>, options: Record<string, any> = {}) {
+    const toast = inject<(msg: string, type: 'success' | 'error') => void>('globalToast')
     const loading = ref(false)
 
-    const execute = async (params) => {
+    const execute = async (params: any) => {
         loading.value = true
         try {
             const {code, data, msg} = await apiFunc(params)
             if (code === 200) {
-                // 核心控制逻辑：
-                // 1. 如果设置了 silent: true，绝对不弹。
-                // 2. 否则，只有在提供了 successMsg 的情况下才弹。
                 if (!options.silent && options.successMsg) {
-                    toast(options.successMsg, 'success')
+                    toast?.(options.successMsg, 'success')
                 }
-
                 options.onSuccess?.(data)
                 return data
             } else {
-                // 错误提示通常不建议 silent，除非特殊业务
                 if (!options.silentError) {
-                    toast(msg || options.errorMsg || '请求失败', 'error')
+                    toast?.(msg || options.errorMsg || '请求失败', 'error')
                 }
             }
         } catch (err) {
-            toast('系统繁忙，请稍后再试', err)
+            // 修复4：第二个参数应为 'error' 而不是 err
+            toast?.('系统繁忙，请稍后再试', 'error')
             return false
         } finally {
             loading.value = false

@@ -21,7 +21,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     // 2. 计算属性：统一暴露当前 ID
     // 核心优化：优先从 URL 获取，URL 没有再看 Store 缓存（单一事实来源原则）
     const activeId = computed(() => {
-        return (route?.params?.wsId as string) || currentWorkspace.value?.id || ''
+        return (route?.params?.wsId as string) || ''
     })
 
     // 3. 切换空间

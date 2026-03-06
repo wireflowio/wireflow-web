@@ -90,7 +90,7 @@ export const useMonitorStore = defineStore('monitor', () => {
         try {
             const { data } = await request.get<WorkspaceResponse>(`/api/v1/workspace/${workspaceId}/snapshot`)
             rawSnapshots.value = data
-            events.value = events
+            // events.value = events
         } finally {
             loading.value = false
         }

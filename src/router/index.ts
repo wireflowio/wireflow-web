@@ -48,7 +48,12 @@ const routes = [
         component: MainLayout,
         children: [
             // --- 全局管理 (不需要选中具体的 Workspace) ---
-            { path: 'dashboard', name: 'dashboard', component: Dashboard },
+            {
+                path: '/dashboard',
+                name: 'global-dashboard',
+                component: () => import('@/pages/Dashboard.vue'),
+                meta: { level: 'global' }
+            },
             { path: 'workspace', name: 'workspace', component: Workspace, meta: { title: '工作空间' } },
             { path: 'peering', name: 'peering', component: BridgeCenter, meta: { title: '对等连接' } },
             { path: 'user', name: 'user', component: Members, meta: { title: '用户管理' } },
@@ -60,6 +65,12 @@ const routes = [
                 path: 'ws/:wsId',
                 redirect: { name: 'nodes' }, // 默认跳转到节点
                 children: [
+                    {
+                        path: '/ws/:wsId/dashboard',
+                        name: 'workspace-dashboard',
+                        component: () => import('@/pages/Dashboard.vue'),
+                        meta: { level: 'workspace' }
+                    },
                     { path: 'topology', name: 'topology', component: Topology, meta: { title: '网络拓扑' } },
                     { path: 'nodes', name: 'nodes', component: Nodes, meta: { title: '节点管理' } },
                     { path: 'tokens', name: 'tokens', component: Tokens, meta: { title: 'Token 管理' } },
