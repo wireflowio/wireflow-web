@@ -6,5 +6,5 @@ import type { WorkspaceResponse } from '@/types/monitor';
  * @param params 这里的 data 通常作为 URL 查询参数 (Query Params)
  * @returns 返回 Promise，其解析值为 WorkspaceResponse 结构
  */
-export const getSnapshot = (params?: any) =>
-    request.get<WorkspaceResponse>("/monitor/snapshot", params);
+export const getSnapshot = () =>
+    request.get<WorkspaceResponse>("/monitor/ws-snapshot");

@@ -33,13 +33,6 @@ const menuGroups = computed(() => {
     group: `空间管理`,
     children: [
       {name: '网络拓扑', to: (id && id !== '') ? `/ws/${id}/topology` : '', icon: 'topology',wsRequired: true},
-      // 关键：这里的路径必须带上当前的 wsId
-      {
-        name: '运行态势',
-        to: (id && id !== '') ? `/ws/${id}/dashboard` : '',
-        icon: 'dashboard',
-        wsRequired: true
-      },
       {name: '节点管理', to: (id && id !== '') ? `/ws/${id}/nodes` : '', icon: 'nodes',wsRequired: true},
       {name: 'Token 管理', to: (id && id !== '') ? `/ws/${id}/tokens` : '', icon: 'token',wsRequired: true},
       {name: '策略管理', to: (id && id !== '') ? `/ws/${id}/policies` : '', icon: 'policy',wsRequired: true},
