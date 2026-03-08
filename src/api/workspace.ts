@@ -13,8 +13,8 @@ export interface Workspace {
 }
 
 // --- Workspace空间管理 ---
-export const add = (data) => request.post('/workspaces/add', data);
+export const add = (data?: any) => request.post('/workspaces/add', data);
 
-export const listWs = (data) => request.get('/workspaces/list', data)
-export const deleteWs = (id) => request.delete(`/workspaces/${id}`);
+export const listWs = (data?: any) => request.get('/workspaces/list', data)
+export const deleteWs = (id? :any) => request.delete(`/workspaces/${id}`);
 

@@ -30,11 +30,11 @@ const pageTitle = computed(() => {
 
 <template>
   <div class="flex items-center justify-between w-full">
-    <nav class="flex items-center gap-1 p-1.5 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-white/5 shadow-sm">
+    <nav class="flex items-center gap-1 p-1.5 bg-base-100/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-white/5 shadow-sm">
 
       <router-link
           to="/dashboard"
-          class="btn btn-ghost btn-sm btn-square rounded-xl hover:bg-white dark:hover:bg-white/5 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
+          class="btn btn-ghost btn-sm btn-square rounded-xl hover:bg-base-100 dark:hover:bg-base-100/5 text-base-content/40 dark:text-base-content/60 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
           title="Dashboard"
       >
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -55,12 +55,12 @@ const pageTitle = computed(() => {
             <router-link
                 v-if="i !== crumbs.length - 1"
                 :to="c.path"
-                class="px-2 py-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg"
+                class="px-2 py-1 text-[11px] font-bold text-base-content/60 dark:text-base-content/40 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg"
             >
               {{ c.title }}
             </router-link>
 
-            <span v-else class="px-2 py-1 text-[11px] font-black text-slate-900 dark:text-slate-100 tracking-tight">
+            <span v-else class="px-2 py-1 text-[11px] font-black text-base-content dark:text-slate-100 tracking-tight">
               {{ c.title }}
             </span>
           </li>
@@ -70,7 +70,7 @@ const pageTitle = computed(() => {
 
     <div class="hidden md:flex items-center gap-4">
       <div class="flex flex-col items-end gap-0.5">
-        <span class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 leading-none">
+        <span class="text-[9px] font-black uppercase tracking-[0.2em] text-base-content/40 dark:text-base-content/60 leading-none">
           Live Session
         </span>
         <span class="text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-none">
@@ -79,7 +79,7 @@ const pageTitle = computed(() => {
       </div>
       <div class="relative flex h-2 w-2">
         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
       </div>
     </div>
   </div>

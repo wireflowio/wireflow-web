@@ -7,7 +7,7 @@ const bridges = ref([
   {
     id: 'br-001',
     name: '上海-北京跨区链',
-    from: { name: '上海生产环境', id: 'ws-101', color: 'bg-blue-500' },
+    from: { name: '上海生产环境', id: 'ws-101', color: 'bg-primary' },
     to: { name: '北京研发中心', id: 'ws-102', color: 'bg-indigo-500' },
     status: 'active',
     type: 'Bi-Directional', // 双向
@@ -36,14 +36,14 @@ const showCreateModal = ref(false)
 
     <div class="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-slate-200 dark:border-white/5 pb-6">
       <div>
-        <h1 class="text-2xl font-black tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
+        <h1 class="text-2xl font-black tracking-tighter text-base-content dark:text-white flex items-center gap-2">
           对等连接中心
           <div class="flex items-center -space-x-2 ml-1">
-            <div class="w-3 h-3 rounded-full bg-blue-500/20 border border-blue-500/50"></div>
+            <div class="w-3 h-3 rounded-full bg-primary/20 border border-blue-500/50"></div>
             <div class="w-3 h-3 rounded-full bg-indigo-500/20 border border-indigo-500/50"></div>
           </div>
         </h1>
-        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1">
+        <p class="text-[11px] font-medium text-base-content/60 dark:text-base-content/40 mt-1">
           管理跨工作空间 (Cross-Workspace) 的网络穿透与受控对等通信。
         </p>
       </div>
@@ -58,12 +58,12 @@ const showCreateModal = ref(false)
         { l: '活跃对等链', v: '08', i: 'link' },
         { l: '跨区总流量', v: '4.8 TB', i: 'chart' },
         { l: '平均时延', v: '24ms', i: 'clock' }
-      ]" :key="item.l" class="bg-white dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200/60 flex items-center gap-4">
-        <div class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-white/5 flex items-center justify-center text-slate-400">
+      ]" :key="item.l" class="bg-base-100 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200/60 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-base-100/5 flex items-center justify-center text-base-content/40">
           <Icon :name="item.i" class="w-5 h-5" />
         </div>
         <div>
-          <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ item.l }}</div>
+          <div class="text-[9px] font-black text-base-content/40 uppercase tracking-widest">{{ item.l }}</div>
           <div class="text-lg font-black text-slate-700 dark:text-slate-200">{{ item.v }}</div>
         </div>
       </div>
@@ -72,7 +72,7 @@ const showCreateModal = ref(false)
     <div class="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-6">
       <div class="space-y-4">
         <div v-for="br in bridges" :key="br.id"
-             class="group bg-white dark:bg-slate-900/50 border border-slate-200/60 dark:border-white/5 rounded-[1.5rem] p-5 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500"
+             class="group bg-base-100 dark:bg-slate-900/50 border border-slate-200/60 dark:border-white/5 rounded-[1.5rem] p-5 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500"
         >
           <div class="flex flex-col lg:flex-row items-center gap-6">
             <div class="flex items-center gap-3 w-full lg:w-48 shrink-0">
@@ -80,7 +80,7 @@ const showCreateModal = ref(false)
                 {{ br.from.name[0] }}
               </div>
               <div class="min-w-0">
-                <div class="text-[9px] font-black text-slate-400 uppercase">Source</div>
+                <div class="text-[9px] font-black text-base-content/40 uppercase">Source</div>
                 <div class="text-[13px] font-bold text-slate-700 dark:text-slate-200 truncate">{{ br.from.name }}</div>
               </div>
             </div>
@@ -89,12 +89,12 @@ const showCreateModal = ref(false)
               <div class="w-full flex items-center gap-2">
                 <div class="h-[1px] flex-1 bg-slate-100"></div>
 
-                <div class="flex items-center gap-4 px-4 py-1.5 bg-slate-50 dark:bg-white/5 rounded-full border border-slate-100 dark:border-white/5 relative group-hover:border-indigo-500/30 transition-colors">
+                <div class="flex items-center gap-4 px-4 py-1.5 bg-slate-50 dark:bg-base-100/5 rounded-full border border-slate-100 dark:border-white/5 relative group-hover:border-indigo-500/30 transition-colors">
                   <Icon v-if="br.type === 'Bi-Directional'" name="chevron-left" class="w-3 h-3 text-indigo-400" />
                   <div class="flex flex-col items-center min-w-[80px]">
                     <span class="text-[9px] font-black text-indigo-500 uppercase tracking-[0.2em] italic">{{ br.type }}</span>
                     <div class="flex items-center gap-1 mt-0.5">
-                      <span class="text-[10px] font-mono text-slate-400">{{ br.latency }}</span>
+                      <span class="text-[10px] font-mono text-base-content/40">{{ br.latency }}</span>
                     </div>
                   </div>
                   <Icon name="chevron-right" class="w-3 h-3 text-indigo-400" />
@@ -108,7 +108,7 @@ const showCreateModal = ref(false)
 
             <div class="flex items-center gap-3 w-full lg:w-48 shrink-0 lg:justify-end text-right">
               <div class="min-w-0">
-                <div class="text-[9px] font-black text-slate-400 uppercase">Destination</div>
+                <div class="text-[9px] font-black text-base-content/40 uppercase">Destination</div>
                 <div class="text-[13px] font-bold text-slate-700 dark:text-slate-200 truncate">{{ br.to.name }}</div>
               </div>
               <div :class="['w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-inner', br.to.color]">
@@ -140,16 +140,16 @@ const showCreateModal = ref(false)
           </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-900/50 border border-slate-200/60 rounded-2xl p-5">
-          <h4 class="text-[10px] font-black uppercase text-slate-400 mb-4">连接健康度说明</h4>
+        <div class="bg-base-100 dark:bg-slate-900/50 border border-slate-200/60 rounded-2xl p-5">
+          <h4 class="text-[10px] font-black uppercase text-base-content/40 mb-4">连接健康度说明</h4>
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold text-slate-600">双向对等 (Bi)</span>
+              <span class="text-[11px] font-bold text-base-content/70">双向对等 (Bi)</span>
               <span class="badge badge-xs bg-indigo-500 border-none text-white font-bold">全互通</span>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold text-slate-600">单向出口 (One)</span>
-              <span class="badge badge-xs bg-slate-200 border-none text-slate-500 font-bold">受控访问</span>
+              <span class="text-[11px] font-bold text-base-content/70">单向出口 (One)</span>
+              <span class="badge badge-xs bg-slate-200 border-none text-base-content/60 font-bold">受控访问</span>
             </div>
           </div>
         </div>
