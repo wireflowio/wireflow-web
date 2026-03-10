@@ -80,6 +80,35 @@ const paths = computed(() => {
         'M2 12l10 5 10-5'
       ]
 
+    case 'arrow-right':
+      return [
+        'M5 12h14',
+        'M12 5l7 7-7 7'
+      ]
+
+    case 'plus': // 顺便帮你补上你 Header 里用到的 plus
+      return [
+        'M12 5v14',
+        'M5 12h14'
+      ]
+
+      // 删掉之前所有的 case 'trash'，统一换成这一个
+    case 'trash':
+      return [
+        'M3 6h18',                             // 顶栏
+        'M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6', // 桶身
+        'M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2',    // 盖子
+        'M10 11v6',                            // 内部线条1
+        'M14 11v6'                             // 内部线条2
+      ]
+
+    case 'info': // 抽屉里安全提示用到的 info
+      return [
+        'M12 8v4',
+        'M12 16h.01',
+        'M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z'
+      ]
+
     case 'peering': // 对等连接：两个互联的节点或交换箭头
       return [
         'M2 8L7 3l5 5',
@@ -98,8 +127,8 @@ const paths = computed(() => {
     case 'edit':
       return ['M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7', 'M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z']
 
-    case 'trash':
-      return ['M3 6h18', 'M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2']
+    // case 'trash':
+    //   return ['M3 6h18', 'M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2']
 
     case 'chevron-right': // 你 Sidebar 底部用到了这个
       return ['M9 18l6-6-6-6']
