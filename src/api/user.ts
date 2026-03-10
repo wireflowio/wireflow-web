@@ -34,3 +34,4 @@ export const updatePeer = (data?: any) => request.put('/peers/update', data);
 
 
 export const getMe = (data?: any) => request.get("/users/getme", data)
+export const updateMe = (data?: any) => request.put("/profile/updateProfile", data)

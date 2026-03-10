@@ -21,10 +21,10 @@ onMounted(() => {
       <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-base-content/10">
         <div class="flex items-center gap-4">
           <div class="p-3 bg-primary rounded-2xl text-primary-content shadow-lg shadow-primary/20">
-            <Icon name="workspace" class="w-6 h-6"/>
+            <Icon name="workspace" :loading="workspacePageStore.loading" class="w-6 h-6"/>
           </div>
           <div>
-            <h1 class="text-2xl font-black tracking-tighter italic uppercase">工作空间</h1>
+            <h1 class="text-2xl font-black tracking-tighter uppercase">工作空间</h1>
             <p class="text-xs font-bold opacity-40 uppercase tracking-widest">
               资源池总数：<span class="text-primary">{{ workspacePageStore.total || 0 }}</span>
             </p>
@@ -33,7 +33,7 @@ onMounted(() => {
 
         <div class="flex items-center gap-2">
           <button class="btn btn-ghost bg-base-100 border-base-content/5 rounded-xl hover:bg-base-200" @click="workspacePageStore.actions.refresh">
-            <Icon name="refresh" :class="['w-4 h-4', workspacePageStore.loading ? 'animate-spin' : '']" />
+            <Icon name="refresh" :loading="workspacePageStore.loading" :class="['w-4 h-4']" />
           </button>
           <button @click="workspacePageStore.actions.openDrawer('create')" class="btn btn-primary rounded-xl px-6 shadow-lg shadow-primary/20">
             <Icon name="plus" class="w-4 h-4 mr-2"/>
@@ -57,7 +57,7 @@ onMounted(() => {
                   {{ themeStore.actions.getFirstChar(ws.displayName) }}
                 </div>
                 <div class="min-w-0">
-                  <h3 class="font-black text-sm truncate group-hover:text-primary transition-colors uppercase italic">{{ ws.displayName }}</h3>
+                  <h3 class="font-black text-sm truncate group-hover:text-primary transition-colors uppercase">{{ ws.displayName }}</h3>
                   <span class="text-[10px] font-mono opacity-40 block truncate tracking-tighter">标识符: {{ ws.id.substring(0,8) }}</span>
                 </div>
               </div>
@@ -87,16 +87,6 @@ onMounted(() => {
               </div>
             </div>
 
-<!--            <div class="p-4 mt-2 flex justify-between items-center rounded-b-3xl bg-base-200/50 group-hover:bg-transparent transition-colors">-->
-<!--              <div class="dropdown dropdown-top">-->
-<!--                <label tabindex="0" class="btn btn-ghost btn-xs btn-square opacity-40 hover:opacity-100 hover:bg-base-300">-->
-<!--                  <Icon name="more" class="w-4 h-4"/>-->
-<!--                </label>-->
-<!--                <ul tabindex="0" class="dropdown-content z-[60] menu p-2 shadow-2xl bg-base-100 border border-base-content/10 rounded-2xl w-40 mb-2">-->
-<!--                  <li><a @click="openDrawer('edit')" class="text-xs font-bold py-2.5 rounded-xl">编辑配置</a></li>-->
-<!--                  <li><a @click="handleDelete(ws)" class="text-xs font-bold py-2.5 rounded-xl text-error">销毁空间</a></li>-->
-<!--                </ul>-->
-<!--              </div>-->
               <div class="p-4 mt-2 flex justify-between items-center rounded-b-3xl bg-base-200/50 group-hover:bg-transparent transition-colors">
                 <div class="flex gap-1">
                   <div class="tooltip tooltip-top" data-tip="编辑">
@@ -118,7 +108,7 @@ onMounted(() => {
                   </div>
                 </div>
 
-                <button @click="workspacePageStore.actions.enterWorkspace(ws)" class="btn btn-primary btn-xs rounded-lg px-4 font-black italic shadow-md">
+                <button @click="workspacePageStore.actions.enterWorkspace(ws)" class="btn btn-primary btn-xs rounded-lg px-4 font-black shadow-md">
                   管理节点
                   <Icon name="arrow-right" class="w-3 h-3 ml-1"/>
                 </button>

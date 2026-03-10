@@ -1,22 +1,19 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { useUserSettingsStore } from '@/stores/pages/userSettings'
+import {onMounted, reactive, ref} from 'vue'
+import Icon from "@/components/icons/Icon.vue";
 
 const tab = ref('profile') // profile | preferences | security
+const userSetting = useUserSettingsStore()
+const tabs = [
+  { id: 'profile', n: '基本资料' },
+  { id: 'preferences', n: '系统偏好' },
+  { id: 'security', n: '安全中心' }
+]
 
-const form = reactive({
-  name: 'admin',
-  email: 'admin@wireflow.local',
-  title: 'Platform Admin',
-  company: 'WireFlow',
-  bio: 'Kubernetes native networking. Powered by WireGuard.',
-  timezone: 'Asia/Shanghai',
-  language: 'zh-CN',
-  emailNotify: true,
-  avatarUrl: 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp',
+onMounted(() =>{
+  userSetting.actions.loadSettings()
 })
-
-const onPickAvatar = () => alert('TODO: 接入文件上传')
-const onSave = () => alert('配置已同步至集群控制面')
 </script>
 
 <template>
@@ -29,8 +26,8 @@ const onSave = () => alert('配置已同步至集群控制面')
         </p>
       </div>
       <div class="flex items-center gap-3">
-        <button class="btn btn-ghost rounded-2xl px-6 text-base-content/60" @click="onSave">丢弃</button>
-        <button class="btn bg-blue-600 hover:bg-blue-700 border-none text-white shadow-xl shadow-blue-500/20 rounded-2xl px-8" @click="onSave">
+        <button class="btn btn-ghost rounded-2xl px-6 text-base-content/60" @click="userSetting.actions.submitChanges">丢弃</button>
+        <button class="btn bg-blue-600 hover:bg-blue-700 border-none text-white shadow-xl shadow-blue-500/20 rounded-2xl px-8" @click="userSetting.actions.submitChanges">
           同步更改
         </button>
       </div>
@@ -45,16 +42,16 @@ const onSave = () => alert('配置已同步至集群控制面')
                 <div class="absolute -inset-1 bg-gradient-to-tr from-blue-600 to-indigo-400 rounded-full blur opacity-25 group-hover:opacity-50 transition"></div>
                 <div class="avatar relative">
                   <div class="w-24 h-24 rounded-full ring-4 ring-white dark:ring-slate-800 shadow-2xl">
-                    <img :src="form.avatarUrl" />
+                    <img :src="userSetting.form.avatarUrl" />
                   </div>
                 </div>
-                <button @click="onPickAvatar" class="absolute bottom-0 right-0 p-2 bg-base-100 dark:bg-slate-800 rounded-full shadow-lg border border-slate-100 dark:border-white/10 text-blue-600">
+                <button @click="userSetting.actions.onPickAvatar" class="absolute bottom-0 right-0 p-2 bg-base-100 dark:bg-slate-800 rounded-full shadow-lg border border-slate-100 dark:border-white/10 text-blue-600">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-width="2"/></svg>
                 </button>
               </div>
 
-              <h2 class="mt-6 text-xl font-black text-base-content dark:text-white">{{ form.name }}</h2>
-              <p class="text-xs font-bold text-base-content/40 uppercase tracking-widest mt-1">{{ form.title }}</p>
+              <h2 class="mt-6 text-xl font-black text-base-content dark:text-white">{{ userSetting.form.name }}</h2>
+              <p class="text-xs font-bold text-base-content/40 uppercase tracking-widest mt-1">{{ userSetting.form?.title }}</p>
 
               <div class="mt-6 flex flex-wrap justify-center gap-2">
                 <span class="px-3 py-1 bg-primary/10 text-blue-600 dark:text-blue-400 text-[10px] font-black rounded-full uppercase">Control Plane</span>
@@ -65,7 +62,7 @@ const onSave = () => alert('配置已同步至集群控制面')
             <div class="h-px bg-slate-100 dark:bg-base-100/5 my-8"></div>
 
             <div class="space-y-4">
-              <div v-for="info in [{l:'所属组织', v:form.company}, {l:'最后同步', v:'刚刚'}]" :key="info.l" class="flex justify-between items-center">
+              <div v-for="info in [{l:'所属组织', v:userSetting.form.company}, {l:'最后同步', v:'刚刚'}]" :key="info.l" class="flex justify-between items-center">
                 <span class="text-[11px] font-bold text-base-content/40 uppercase">{{ info.l }}</span>
                 <span class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ info.v }}</span>
               </div>
@@ -80,7 +77,8 @@ const onSave = () => alert('配置已同步至集群控制面')
           </button>
           <button class="w-full flex items-center justify-between p-4 hover:bg-base-100 dark:hover:bg-base-100/5 rounded-2xl transition-all group mt-1">
             <span class="text-xs font-bold text-rose-500">注销当前会话</span>
-            <svg class="w-4 h-4 text-rose-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-width="2"/></svg>
+            <Icon name="exit"/>
+<!--            <svg class="w-4 h-4 text-rose-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-width="2"/></svg>-->
           </button>
         </div>
       </aside>
@@ -88,7 +86,7 @@ const onSave = () => alert('配置已同步至集群控制面')
       <section class="bg-base-100/50 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-white/5 rounded-[2.5rem] shadow-sm min-h-[600px] flex flex-col overflow-hidden">
         <div class="flex gap-8 px-10 pt-8">
           <button
-              v-for="t in [{id:'profile', n:'基本资料'}, {id:'preferences', n:'系统偏好'}, {id:'security', n:'安全中心'}]"
+              v-for="t in tabs"
               :key="t.id"
               @click="tab = t.id"
               class="pb-4 text-sm font-black transition-all relative"
@@ -107,11 +105,11 @@ const onSave = () => alert('配置已同步至集群控制面')
               <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div v-for="field in [{l:'显示名称', k:'name'}, {l:'工作邮箱', k:'email'}, {l:'职位头衔', k:'title'}, {l:'所属单位', k:'company'}]" :key="field.k">
                   <label class="block text-[10px] font-black uppercase tracking-widest text-base-content/40 mb-3">{{ field.l }}</label>
-                  <input v-model="form[field.k]" class="w-full bg-slate-100/50 dark:bg-slate-800/50 border-none rounded-2xl py-3 px-5 text-sm focus:ring-2 focus:ring-blue-500/20 transition-all outline-none" />
+                  <input v-model="userSetting.form[field.k]" class="w-full bg-slate-100/50 dark:bg-slate-800/50 border-none rounded-2xl py-3 px-5 text-sm focus:ring-2 focus:ring-blue-500/20 transition-all outline-none" />
                 </div>
                 <div class="md:col-span-2">
                   <label class="block text-[10px] font-black uppercase tracking-widest text-base-content/40 mb-3">个人简介 (Bio)</label>
-                  <textarea v-model="form.bio" rows="4" class="w-full bg-slate-100/50 dark:bg-slate-800/50 border-none rounded-[1.5rem] py-4 px-5 text-sm focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"></textarea>
+                  <textarea v-model="userSetting.form.bio" rows="4" class="w-full bg-slate-100/50 dark:bg-slate-800/50 border-none rounded-[1.5rem] py-4 px-5 text-sm focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"></textarea>
                 </div>
               </div>
             </div>
@@ -120,14 +118,14 @@ const onSave = () => alert('配置已同步至集群控制面')
               <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <label class="block text-[10px] font-black uppercase tracking-widest text-base-content/40 mb-3">首选语言</label>
-                  <select v-model="form.language" class="w-full bg-slate-100/50 dark:bg-slate-800/50 border-none rounded-2xl py-3 px-5 text-sm outline-none">
+                  <select v-model="userSetting.form.language" class="w-full bg-slate-100/50 dark:bg-slate-800/50 border-none rounded-2xl py-3 px-5 text-sm outline-none">
                     <option value="zh-CN">简体中文 (Default)</option>
                     <option value="en-US">English (Global)</option>
                   </select>
                 </div>
                 <div>
                   <label class="block text-[10px] font-black uppercase tracking-widest text-base-content/40 mb-3">系统时区</label>
-                  <select v-model="form.timezone" class="w-full bg-slate-100/50 dark:bg-slate-800/50 border-none rounded-2xl py-3 px-5 text-sm outline-none">
+                  <select v-model="userSetting.form.timezone" class="w-full bg-slate-100/50 dark:bg-slate-800/50 border-none rounded-2xl py-3 px-5 text-sm outline-none">
                     <option>Asia/Shanghai (CST)</option>
                     <option>UTC</option>
                   </select>
@@ -137,7 +135,7 @@ const onSave = () => alert('配置已同步至集群控制面')
                     <h4 class="text-sm font-black text-slate-800 dark:text-slate-100">高优先级邮件通知</h4>
                     <p class="text-xs text-base-content/60 mt-1 font-medium">涉及网络变动、节点宕机或安全漏洞时立即通知</p>
                   </div>
-                  <input type="checkbox" v-model="form.emailNotify" class="toggle toggle-info scale-110" />
+                  <input type="checkbox" v-model="userSetting.form.emailNotify" class="toggle toggle-info scale-110" />
                 </div>
               </div>
             </div>
