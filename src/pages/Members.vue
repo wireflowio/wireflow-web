@@ -95,13 +95,13 @@ const handleSave = async () => {
           <Icon name="user" class="w-6 h-6"/>
         </div>
         <div>
-          <h1 class="text-2xl font-black tracking-tighter uppercase italic">Identity Management</h1>
+          <h1 class="text-2xl font-black tracking-tighter uppercase">用户管理</h1>
           <p class="text-xs font-bold opacity-40 uppercase tracking-widest">Wireflow RBAC Control Plane</p>
         </div>
       </div>
       <div class="flex gap-2">
         <button class="btn btn-ghost bg-base-200/50 border-base-content/5 rounded-xl hover:bg-base-200" @click="refresh">
-          <Icon name="refresh" :class="['w-4 h-4', loading ? 'animate-spin' : '']" />
+          <Icon name="refresh" :class="['w-4 h-4']" />
         </button>
         <button @click="openCreate" class="btn btn-primary rounded-xl px-6 shadow-lg shadow-primary/20">
           <Icon name="plus" class="w-4 h-4 mr-2"/>
@@ -169,7 +169,7 @@ const handleSave = async () => {
                   授权
                 </button>
                 <button @click="handleDelete(m)" class="btn btn-ghost btn-xs text-error/40 hover:text-error hover:bg-error/10">
-                  <Icon name="trash" class="w-3.5 h-3.5" />
+                  <Icon name="trash" class="w-4 h-4" />
                 </button>
               </div>
             </td>

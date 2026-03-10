@@ -19,6 +19,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # 关键修复：强制拉取 PR 的最新提交，而不是目标分支的旧代码
+          ref: ${{ github.event.pull_request.head.sha }}
+          # 建议增加：拉取完整历史
+          fetch-depth: 0
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -37,4 +42,6 @@ jobs:
           no-cache: true
           pull: true          # 强制拉取最新的基础镜像
           # 这样会触发 Dockerfile 里的 npm install 和 npm build
-          tags: ghcr.io/wireflowio/wireflow-web:dev
+          tags: |
+            ghcr.io/wireflowio/wireflow-web:dev
+            ghcr.io/wireflowio/wireflow-web:${{ github.sha }}
