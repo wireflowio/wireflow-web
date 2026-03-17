@@ -1,72 +1,11 @@
 <script setup lang="ts">
-import {computed, inject, ref, watch} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
-import {useTheme} from '../composables/useTheme'
-import {useUserStore} from '@/stores/user'
-import {useTable} from '@/composables/useApi'
-import {listWs} from "@/api/workspace";
-
-import {useWorkspaceStore} from "@/stores/workspace";
-
-const wsStore = useWorkspaceStore()
+import {useNavbarStore} from "@/stores/pages/topNavbar";
+import {useUserStore} from "@/stores/user";
+import {useTheme} from "@/composables/useTheme";
 
 const userStore = useUserStore()
-
-const toast = inject('globalToast')
-const route = useRoute()
-const router = useRouter()
 const {theme, toggleTheme} = useTheme()
-
-// 2. 列表数据流
-const {rows, total, loading, params, refresh} = useTable(listWs, {
-  successMsg: '数据已同步',
-  errorMsg: '无法获取空间列表',
-})
-
-// 响应式数据
-const user = ref({
-  name: '',
-  email: '',
-  userId: '',
-  role: '',
-  avatarUrl: '',
-})
-
-// 当前 Workspace 标识（多租户核心）
-// const currentWorkspace = computed(() => route.params.wsId || 'Default Space')
-
-// 1. 模拟当前选中的 Workspace 数据 (实际应从 Pinia/Vuex 获取)
-// 这里的逻辑：如果当前路由包含 /ws/，则认为在某个空间内
-// ✅ 使用 computed，只要 URL 里的 wsId 变了，这里会自动更新
-const currentWsId = computed(() => route.params.wsId as string)
-
-
-const switchWorkspace = (ws) => {
-  wsStore.switchWorkspace(ws)
-  router.push({name: 'dashboard', params: {wsId: ws.id}}) // 驱动视图
-}
-
-const handleLogout = () => {
-  localStorage.removeItem('wf_user')
-  localStorage.removeItem('wf_token')
-  router.push('/login')
-}
-
-
-// 3. 核心同步逻辑：当 useTable 的 rows 更新时，同步给 Store
-watch(rows, (newRows) => {
-  if (newRows) {
-    wsStore.setRows(newRows) // 将列表存入 Store
-  }
-}, { immediate: true })
-
-// 4. 辅助：如果 Store 里的当前空间对象丢失（比如刷新页面），根据 URL 找回
-watch(() => route.params.wsId, (newId) => {
-  if (newId && rows.value.length > 0) {
-    const active = rows.value.find(item => item.id === newId)
-    if (active) wsStore.switchWorkspace(active)
-  }
-}, { immediate: true })
+const navStore = useNavbarStore()
 
 </script>
 <template>
@@ -79,48 +18,66 @@ watch(() => route.params.wsId, (newId) => {
 
         <div class="navbar-start gap-3">
           <router-link to="/dashboard" class="flex items-center gap-2 group">
-            <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
+            <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform duration-500">
               <svg width="18" height="18" viewBox="0 0 32 32" fill="none" class="text-primary-content">
                 <path d="M18 6L10 18H16L14 26L22 14H16L18 6Z" fill="currentColor"/>
               </svg>
             </div>
-            <span class="text-base font-black tracking-tighter uppercase text-base-content hidden md:block">
-              Wireflow
-            </span>
+            <span class="text-base font-black tracking-tighter uppercase text-base-content hidden md:block">Wireflow</span>
           </router-link>
 
           <div class="h-4 w-px bg-base-content/10 mx-1 hidden sm:block"></div>
 
           <div class="dropdown">
             <div tabindex="0" role="button"
-                 class="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-base-content/5 transition-all cursor-pointer group">
-              <div class="w-6 h-6 rounded bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white shadow-sm uppercase">
-                {{ wsStore.currentWorkspace?.displayName.substring(0, 1) }}
+                 class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-base-content/5 transition-all cursor-pointer group border border-transparent hover:border-base-content/10">
+              <div class="w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] font-black text-white shadow-sm shadow-indigo-500/20 uppercase transition-transform group-hover:rotate-3">
+                {{ navStore.currentWorkspace?.displayName.substring(0, 1) }}
               </div>
-              <span class="text-[12px] font-bold text-base-content/70 max-w-[100px] truncate">
-                {{ wsStore.currentWorkspace?.displayName }}
-              </span>
-              <svg class="w-3 h-3 opacity-30 group-hover:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none"
+              <div class="flex flex-col items-start leading-none">
+                <span class="text-[11px] font-black text-base-content/30 uppercase tracking-[0.1em] scale-90 origin-left mb-0.5">Workspace</span>
+                <span class="text-[12px] font-bold text-base-content/80 max-w-[100px] truncate">
+            {{ navStore.currentWorkspace?.displayName }}
+          </span>
+              </div>
+              <svg class="w-3.5 h-3.5 opacity-20 group-hover:opacity-100 transition-all group-hover:translate-y-0.5" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" stroke-width="3">
                 <path d="M6 9l6 6 6-6"></path>
               </svg>
             </div>
 
             <ul tabindex="0"
-                class="dropdown-content menu bg-base-100 rounded-2xl z-50 mt-2 w-56 p-2 shadow-2xl border border-base-content/5 animate-fade-in">
-              <li class="menu-title px-3 py-2 text-[9px] uppercase tracking-widest opacity-40">切换工作空间</li>
-              <li v-for="ws in rows" :key="ws.id">
-                <a @click="switchWorkspace(ws)" :class="{ 'active': currentWsId === ws.id }"
-                   class="flex items-center gap-3 p-3 rounded-xl hover:bg-base-content/5">
-                  <div class="w-8 h-8 rounded-lg bg-base-200 flex items-center justify-center font-bold text-xs">
-                    {{ ws.displayName[0] }}
-                  </div>
-                  <span class="text-sm font-medium">{{ ws.displayName }}</span>
-                </a>
+                class="dropdown-content menu bg-base-100/95 backdrop-blur-2xl rounded-[1.5rem] z-[100] mt-3 w-64 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-base-content/5 animate-in fade-in zoom-in duration-200">
+              <li class="menu-title px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
+                您的工作空间
               </li>
-              <div class="divider my-1 opacity-5"></div>
-              <li>
-                <router-link to="/workspace/settings" class="text-primary text-xs font-bold py-2.5 hover:bg-primary/10 text-center">
+
+              <div class="space-y-1 px-1">
+                <li v-for="ws in navStore.rows" :key="ws.id">
+                  <a @click="navStore.actions.switchWorkspace(ws)"
+                     :class="{ 'bg-primary/10 text-primary shadow-sm': navStore.currentWsId === ws.id }"
+                     class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-base-content/5 transition-all group/item">
+                    <div class="relative">
+                      <div class="w-9 h-9 rounded-lg bg-base-200 flex items-center justify-center font-bold text-sm transition-colors group-hover/item:bg-base-300">
+                        {{ ws.displayName[0] }}
+                      </div>
+                      <div v-if="navStore.currentWsId === ws.id" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-base-100"></div>
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="text-sm font-bold">{{ ws.displayName }}</span>
+                      <span class="text-[10px] font-medium opacity-40">Active Nodes: 12</span>
+                    </div>
+                    <Icon v-if="navStore.currentWsId === ws.id" name="check" class="ml-auto w-4 h-4 text-primary" />
+                  </a>
+                </li>
+              </div>
+
+              <div class="divider my-2 opacity-5"></div>
+
+              <li class="px-1">
+                <router-link to="/workspace/settings"
+                             class="flex items-center justify-center gap-2 py-3 bg-base-200/50 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-primary hover:text-primary-content transition-all shadow-inner">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6" stroke-width="3"/></svg>
                   管理所有空间
                 </router-link>
               </li>
@@ -192,7 +149,7 @@ watch(() => route.params.wsId, (newId) => {
                   </span>
                 </div>
                 <p class="text-xs font-bold text-base-content truncate">{{ userStore.userInfo?.username }}</p>
-                <p class="text-[10px] text-base-content/40 truncate mt-0.5">{{ user.email }}</p>
+                <p class="text-[10px] text-base-content/40 truncate mt-0.5">{{ userStore.userInfo?.email }}</p>
               </div>
 
               <li><router-link to="/profile" class="rounded-lg py-2 text-[11px] font-bold hover:bg-base-content/5">个人中心</router-link></li>
@@ -201,7 +158,7 @@ watch(() => route.params.wsId, (newId) => {
               <div class="divider my-1 opacity-5"></div>
 
               <li>
-                <button @click="handleLogout"
+                <button @click="navStore.actions.handleLogout"
                         class="text-error hover:bg-error/10 rounded-lg py-2 text-[11px] font-black uppercase tracking-widest">
                   安全退出
                 </button>
@@ -213,42 +170,3 @@ watch(() => route.params.wsId, (newId) => {
     </div>
   </header>
 </template>
-
-<!--<style scoped>-->
-<!--.animate-fade-in {-->
-<!--  animation: fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;-->
-<!--}-->
-
-<!--@keyframes fadeIn {-->
-<!--  from {-->
-<!--    opacity: 0;-->
-<!--    transform: translateY(8px) scale(0.98);-->
-<!--  }-->
-<!--  to {-->
-<!--    opacity: 1;-->
-<!--    transform: translateY(0) scale(1);-->
-<!--  }-->
-<!--}-->
-
-<!--/* 自定义搜索框阴影 */-->
-<!--input:focus {-->
-<!--  box-shadow: 0 4px 20px -5px rgba(59, 130, 246, 0.15);-->
-<!--}-->
-
-<!--@keyframes progress-loading {-->
-<!--  0% {-->
-<!--    transform: translateX(-100%);-->
-<!--  }-->
-<!--  50% {-->
-<!--    transform: translateX(-30%);-->
-<!--  }-->
-<!--  100% {-->
-<!--    transform: translateX(100%);-->
-<!--  }-->
-<!--}-->
-
-<!--.animate-progress-loading {-->
-<!--  width: 100%;-->
-<!--  animation: progress-loading 1.5s infinite ease-in-out;-->
-<!--}-->
-<!--</style>-->

@@ -1,35 +1,24 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import Icon from '@/components/icons/Icon.vue'
+import { useUserDashboardStore } from '@/stores/useDashboard'
 
-// 1. 全局宏观指标
-const globalStats = ref([
-  { label: '活跃工作空间', value: '12', trend: '+1', trendUp: true, color: 'text-blue-500', barWidth: 'w-1/2', unit: 'SETS' },
-  { label: '全网在线节点', value: '1,284', trend: 'Live', trendUp: true, color: 'text-emerald-500', barWidth: 'w-3/4', unit: 'NODE' },
-  { label: '全域总吞吐', value: '8.4', trend: 'Gbps', trendUp: true, color: 'text-primary', barWidth: 'w-2/3', unit: 'BAND' },
-  { label: '未处理告警', value: '03', trend: 'Critical', trendUp: false, color: 'text-error', barWidth: 'w-1/4', unit: 'WARN' },
-])
+const dashboardStore = useUserDashboardStore()
 
-// 2. 工作空间资源消耗排行 (全局视角特有)
-const workspaceUsage = [
-  { name: '上海 AIGC 算力池', nodes: 450, traffic: '2.4 TB', health: 98, status: 'Running' },
-  { name: '北京研发中心', nodes: 320, traffic: '1.8 TB', health: 100, status: 'Running' },
-  { name: '香港跨境加速', nodes: 180, traffic: '3.2 TB', health: 92, status: 'Warning' },
-  { name: '内蒙边缘节点', nodes: 120, traffic: '450 GB', health: 99, status: 'Running' },
-]
-
-// 3. 全局审计（跨空间）
-const globalEvents = [
-  { time: '14:20:01', ws: '上海', type: 'Security', content: '检测到大流量跨域同步请求', tone: 'blue' },
-  { time: '14:15:22', ws: '香港', type: 'Node', content: '3个边缘节点由于延迟过高切换至中继模式', tone: 'amber' },
-  { time: '13:50:10', ws: '系统', type: 'Auth', content: '管理员更新了全域防火墙白名单', tone: 'emerald' },
-]
-
+// 语义化颜色映射：将后端下发的 tone 转换为具体的 CSS 类
 const toneStyles: Record<string, string> = {
-  emerald: 'bg-success/10 text-success border-success/20',
-  amber: 'bg-warning/10 text-warning border-warning/20',
-  blue: 'bg-primary/10 text-primary border-primary/20',
+  emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  amber: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  blue: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
 }
+
+// 自动刷新逻辑
+onMounted(() => {
+  dashboardStore.refresh()
+  // 可选：开启定时轮询
+  // setInterval(() => dashboardStore.refresh(), 5000)
+})
+
 </script>
 
 <template>
@@ -59,7 +48,7 @@ const toneStyles: Record<string, string> = {
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      <div v-for="s in globalStats" :key="s.label"
+      <div v-for="s in dashboardStore.data.global_stats" :key="s.label"
            class="bg-base-100 border border-base-content/10 p-5 rounded-2xl shadow-sm hover:border-primary/30 transition-all">
         <div class="flex justify-between items-start">
           <div class="text-[9px] font-black uppercase tracking-widest text-base-content/40">{{ s.label }}</div>
@@ -94,7 +83,7 @@ const toneStyles: Record<string, string> = {
             </tr>
             </thead>
             <tbody class="text-[12px] font-bold">
-            <tr v-for="ws in workspaceUsage" :key="ws.name" class="hover:bg-base-200/50 transition-colors cursor-pointer group">
+            <tr v-for="ws in dashboardStore.data.workspace_usage" :key="ws.name" class="hover:bg-base-200/50 transition-colors cursor-pointer group">
               <td class="pl-8 py-4">
                 <div class="flex flex-col">
                   <span class="group-hover:text-primary transition-colors">{{ ws.name }}</span>
@@ -128,7 +117,7 @@ const toneStyles: Record<string, string> = {
           <span class="badge badge-error badge-xs animate-pulse"></span>
         </div>
         <div class="divide-y divide-base-content/5 overflow-y-auto">
-          <div v-for="(e, i) in globalEvents" :key="i" class="p-4 space-y-2 hover:bg-base-200/50 transition-all group">
+          <div v-for="(e, i) in dashboardStore.data.global_events" :key="i" class="p-4 space-y-2 hover:bg-base-200/50 transition-all group">
             <div class="flex justify-between items-center">
               <span class="text-[9px] font-mono font-bold text-base-content/30">{{ e.time }}</span>
               <span class="text-[8px] font-black text-primary px-1 border border-primary/20 rounded uppercase">{{ e.ws }}</span>
